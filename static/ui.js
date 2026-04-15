@@ -337,6 +337,32 @@ function HomeScreen() {
 			fill: #a0a5b5;
 		}
 
+		.cloak-btn {
+			position: absolute;
+			bottom: 2em;
+			left: 6em;
+			background: #252932;
+			border: none;
+			border-radius: 0.5em;
+			width: 3em;
+			height: 3em;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			transition: background 0.2s;
+		}
+
+		.cloak-btn:hover {
+			background: #2f3440;
+		}
+
+		.cloak-btn svg {
+			width: 1.5em;
+			height: 1.5em;
+			fill: #a0a5b5;
+		}
+
 		.proxy-btn {
 			margin-top: 2.5em;
 			padding: 0.8em 2.5em;
@@ -370,6 +396,24 @@ function HomeScreen() {
 		this.interval = setInterval(this.updateTime, 1000);
 	};
 
+	this.cloak = () => {
+		let win = window.open();
+		if (!win) {
+			alert("Please allow popups to use the cloaking feature.");
+			return;
+		}
+		win.document.body.style.margin = '0';
+		win.document.body.style.height = '100vh';
+		let iframe = win.document.createElement('iframe');
+		iframe.style.border = 'none';
+		iframe.style.width = '100%';
+		iframe.style.height = '100%';
+		iframe.style.margin = '0';
+		iframe.src = window.location.href;
+		win.document.body.appendChild(iframe);
+		window.location.replace("https://classroom.google.com");
+	};
+
 	return html`
 		<div>
 			<div class="clock">${use(this.time)}</div>
@@ -382,9 +426,15 @@ function HomeScreen() {
 			
 			<button class="proxy-btn" on:click=${this.onOpenProxy}>Proxy</button>
 
-			<button class="home-btn">
+			<button class="home-btn" title="Home">
 				<svg viewBox="0 0 24 24">
 					<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+				</svg>
+			</button>
+
+			<button class="cloak-btn" on:click=${this.cloak} title="Hide in about:blank">
+				<svg viewBox="0 0 24 24">
+					<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
 				</svg>
 			</button>
 
