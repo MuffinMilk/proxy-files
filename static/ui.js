@@ -38,34 +38,33 @@ function Config() {
      backdrop-filter: blur(3px);
     }
 
-    .buttons {
-      gap: 0.5em;
+    .cfg-iframe {
+      width: 800px;
+      height: 600px;
+      border: none;
+      border-radius: 8px;
     }
-    .buttons button {
-      border: 1px solid #4c8bf5;
-      background-color: #313131;
-      border-radius: 0.75em;
-      color: #fff;
-      padding: 0.45em;
-    }
-    .input_row input {
-      background-color: rgb(18, 18, 18);
-      border: 2px solid rgb(49, 49, 49);
-      border-radius: 0.75em;
-      color: #fff;
-      outline: none;
-      padding: 0.45em;
-    }
-    .input_row {
-      margin-bottom: 0.5em;
-      margin-top: 0.5em;
-    }
-    .input_row input {
-      flex-grow: 1;
-    }
-    .centered {
-      justify-content: center;
+    
+    .close-cfg-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: none;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
       align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      z-index: 1000;
+    }
+    
+    .close-cfg-btn:hover {
+      background: rgba(255, 0, 0, 0.5);
     }
   `;
 
@@ -78,55 +77,22 @@ function Config() {
 	}
 
 	return html`
-      <dialog class="cfg" style="background-color: #121212; color: white; border-radius: 8px;">
-        <div style="align-self: end">
-          <div class=${[flex, "buttons"]}>
-            <button on:click=${() => {
-							connection.setTransport("/baremod/index.mjs", [store.bareurl]);
-							store.transport = "/baremod/index.mjs";
-						}}>use bare server 3</button>
-            <button on:click=${() => {
-							connection.setTransport("/libcurl/index.mjs", [
-								{ wisp: store.wispurl },
-							]);
-							store.transport = "/libcurl/index.mjs";
-						}}>use libcurl.js</button>
-              <button on:click=${() => {
-								connection.setTransport("/epoxy/index.mjs", [
-									{ wisp: store.wispurl },
-								]);
-								store.transport = "/epoxy/index.mjs";
-							}}>use epoxy</button>
-          </div>
-        </div>
-        <div class=${[flex, col, "input_row"]}>
-          <label for="wisp_url_input">Wisp URL:</label>
-          <input id="wisp_url_input" bind:value=${use(store.wispurl)} spellcheck="false"></input>
-        </div>
-        <div class=${[flex, col, "input_row"]}>
-          <label for="bare_url_input">Bare URL:</label>
-          <input id="bare_url_input" bind:value=${use(store.bareurl)} spellcheck="false"></input>
-        </div>
-        <div>${use(store.transport)}</div>
-        <div class=${[flex, "buttons", "centered"]}>
-          <button on:click=${() => handleModalClose(this.root)}>close</button>
-        </div>
+      <dialog class="cfg" style="background-color: #121212; color: white; border-radius: 8px; padding: 0; position: relative; overflow: hidden; border: 1px solid #333;">
+        <button class="close-cfg-btn" on:click=${() => handleModalClose(this.root)}>
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <iframe class="cfg-iframe" src="https://dev.desmos.live.cdn.cloudflare.net/~"></iframe>
       </dialog>
   `;
 }
-
 function BrowserApp() {
 	this.css = `
-		--bg: #000000;
-		--bg-2: #0a0a0a;
-		--bg-3: #121212;
-		--bg-4: #1a1a1a;
-		--bg-5: rgba(0, 0, 0, 0.8);
-		--browser-controls-height: 98px;
-		--browser-bookmarks-height: 38px;
-		--browser-toolbar-height: 40px;
-		--browser-button-size: 40px;
-		--browser-tab-height: 40px;
+		--navbar-background-color: #0b0b0b;
+		--header-active-background-color: rgba(140, 0, 255, 0.55);
+		--header-hover-background-color: rgba(140, 0, 255, 0.13);
+		--hr-background: rgba(160, 160, 160, 0.274);
+		--text-color: #ffffff;
+		--utility-background-color: #0b0b0b;
 
 		width: 100%;
 		height: 100%;
@@ -134,267 +100,382 @@ function BrowserApp() {
 		flex-direction: column;
 		box-sizing: border-box;
 		position: relative;
-		background: var(--bg);
+		background: #000;
+		font-family: 'DM Sans', sans-serif;
 
-		iframe {
-			height: calc(100vh - var(--browser-controls-height) - var(--browser-bookmarks-height) - 15px);
-			width: calc(100vw - 10px);
-			background: #fff;
-			position: absolute;
-			left: calc(50% - 1px);
-			transform: translateX(-50%);
-			bottom: 7.5px;
-			border: none;
-			border-radius: 20px;
-			z-index: 2;
-		}
-
-		.controls {
-			height: calc(var(--browser-controls-height) + var(--browser-bookmarks-height));
-			background: var(--bg);
-			width: 100vw;
+		/* Global Navbar */
+		.navbar {
+			list-style-type: none;
+			padding-left: 5px;
+			padding-right: 5px;
+			padding-top: 5px;
+			margin: 0;
+			direction: ltr;
+			width: 3.5em;
+			height: 100%;
+			background-color: var(--navbar-background-color);
 			position: fixed;
 			left: 0;
 			top: 0;
-			padding: 5px;
-			box-sizing: border-box;
-			transition: height 0.2s ease;
-			z-index: 3;
+			text-align: center;
+			box-shadow: 1px 0 1px 0 rgba(0,0,0,0.86);
+			z-index: 2147483641;
 		}
 
-		.tabs {
+		.navbar img.logo {
+			width: 40px;
+			height: 40px;
+			border-radius: 10px;
+		}
+
+		.navbar hr { width: 40px; height: 1px; background: var(--hr-background); border: none; margin-top: 5px; margin-bottom: 5px; display: inline-block; }
+		.navbar span, .navbar i { font-size: 24px; padding: 10px; color: var(--text-color); transition: 0.12s; cursor: pointer; display: inline-block; }
+		.navbar span:hover, .navbar i:hover { background-color: var(--header-hover-background-color); border-radius: 7px; }
+		#navactive { background-color: var(--header-active-background-color); border-radius: 7px; color: white !important; }
+
+		/* Utility Bar (Top) */
+		.utilityBar {
+			position: fixed;
+			left: 3.5em; 
+			top: 0;
+			width: calc(100% - 3.5em);
+			height: 58px;
+			background-color: var(--utility-background-color);
+			z-index: 2147483640;
+			display: flex;
+			align-items: center;
+			padding-left: 5px;
+			padding-right: 15px;
+		}
+
+		.utilityBar::after {
+			content: '';
 			position: absolute;
+			bottom: 0;
 			left: 0;
-			top: 2.5px;
-			padding: 4px 10px;
 			width: 100%;
-			height: 44px;
-			display: flex;
-			gap: 5px;
+			height: 1px;
+			background: rgba(255, 255, 255, 0.05); /* thin divider */
 		}
 
-		.tab {
-			background: var(--bg-3);
-			width: 200px;
-			height: var(--browser-tab-height);
-			border-radius: 16px;
-			padding: 6px 10px;
-			box-sizing: border-box;
+		.utility {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			display: flex;
+			align-items: center;
+			width: 100%;
+		}
+
+		.utility li {
+			display: inline-block;
+			margin-left: 2px;
+			margin-right: 2px;
+		}
+
+		.utilityIcon {
+			cursor: pointer;
+			color: var(--text-color);
+			padding: 6px;
+			border-radius: 7px;
+			transition: 0.2s;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.utilityIcon:hover {
+			background-color: var(--header-hover-background-color);
+		}
+
+		.utilityIcon span {
+			font-size: 20px;
+		}
+
+		.utility hr {
+			width: 1px;
+			height: 20px;
+			min-width: 1px;
+			background: var(--hr-background);
+			border: none;
+			margin-left: 10px;
+			margin-right: 10px;
+		}
+
+		.search-header {
+			flex-grow: 1;
+			margin-left: 10px;
+			margin-right: 10px;
 			position: relative;
-			color: white;
 			display: flex;
 			align-items: center;
-			overflow: hidden;
-			white-space: nowrap;
-			cursor: default;
-			transition: 0.2s;
 		}
 
-		.closetab {
-			position: absolute;
-			right: 12px;
-			cursor: pointer;
-			font-size: 13px;
-		}
-
-		.tab span {
-			font-weight: 500;
-			width: max-content;
-			text-wrap: unset;
-			overflow: hidden;
+		.search-header__input {
+			font-family: 'DM Sans', sans-serif;
+			font-size: 14px;
+			background-color: #121212;
+			border: solid 1px #333;
+			color: #fff;
+			padding: 0.5rem 1rem 0.5rem 40px;
+			border-radius: 25px;
+			height: 24px;
+			min-width: 240px;
+			box-sizing: content-box;
 			width: 100%;
-			mask-image: linear-gradient(to right, black 60%, transparent 85%);
-			-webkit-mask-image: linear-gradient(to right, black 60%, transparent 85%);
+			transition: ease-in-out 0.2s;
 		}
 
-		.toolbar {
-			position: absolute;
-			top: 52px;
-			left: -5px;
-			justify-items: center;
-			justify-content: center;
-			box-sizing: border-box;
-			height: var(--browser-toolbar-height);
-			display: flex;
-			width: 100%;
-			gap: 8px;
-			padding: 0 6px;
-		}
-
-		#bar {
-			flex: 0.97;
-			box-sizing: border-box;
-			border-radius: 16px;
-			border: none;
-			background: var(--bg-2);
-			padding: 8px 16px;
+		.search-header__input:focus, .search-header__input:hover {
 			outline: none;
-			color: white;
-			font-size: 15px;
-			transition: 0.2s;
-			height: var(--browser-toolbar-height);
+			border-color: #ae00ff;
+			color: rgba(255, 255, 255, 0.9);
 		}
 
-		#bar:focus {
-			background: var(--bg-3);
-		}
-
-		.toolbar button {
-			width: var(--browser-button-size);
-			height: var(--browser-button-size);
-			border-radius: 16px;
-			border: none;
-			background: var(--bg-2);
-			color: white;
-			transition: 0.2s;
-			cursor: pointer;
-			font-size: 15px;
-			flex-shrink: 0;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-
-		.toolbar button:hover {
-			background: var(--bg-3);
-		}
-
-		#newtab {
-			width: var(--browser-button-size);
-			height: var(--browser-button-size);
-			border-radius: 16px;
-			border: none;
-			background: var(--bg-2);
-			color: white;
-			transition: 0.2s;
-			cursor: pointer;
-			font-size: 15px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-
-		#newtab:hover {
-			background: var(--bg-3);
-		}
-
-		.bookmarks {
-			box-sizing: border-box;
-			display: flex;
-			flex-direction: row;
-			flex-wrap: nowrap;
-			width: 100%;
-			height: var(--browser-bookmarks-height);
-			padding: 0 6px;
+		.search-header__button {
 			position: absolute;
-			top: 94px;
-			gap: 5px;
-			overflow: hidden;
-			opacity: 1;
-		}
-
-		.bookmark {
-			border-radius: 100px;
-			width: auto;
-			height: 100%;
-			padding: 2px 11px;
-			height: 38px;
-			box-sizing: border-box;
-			font-size: 13px;
-			background: var(--bg-2);
+			left: 12px;
+			margin-top: 1px;
+			background: none;
+			border: none;
+			color: var(--text-color);
 			display: flex;
 			align-items: center;
-			gap: 5px;
-			cursor: pointer;
-			transition: 0.2s;
 			justify-content: center;
+			padding: 0;
+			pointer-events: none;
 		}
 
-		.bookmark:hover {
-			background: var(--bg-3);
+		.proxyWrapper {
+			position: absolute;
+			top: 58px;
+			left: 3.5em;
+			width: calc(100% - 3.5em);
+			height: calc(100% - 58px);
+			background: #000;
 		}
 
-		.bookmark span {
-			color: white;
-			font-weight: 500;
+		iframe {
+			width: 100%;
+			height: 100%;
+			border: none;
+			background: #000;
 		}
 	`;
 	this.url = store.url;
 
 	const frame = scramjet.createFrame();
 
+	const handleMessage = (e) => {
+		if (e.data && e.data.type === 'scramjet-navigate') {
+			this.url = e.data.url;
+			handleSubmit();
+		}
+	};
+
 	this.mount = () => {
-		let body = btoa(
-			`<body style="background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">Welcome to <i>Scramjet</i>! Type in a URL in the omnibox above and press enter to get started.</body>`
-		);
-		frame.go(`data:text/html;base64,${body}`);
+		window.addEventListener("message", handleMessage);
+		const htmlStart = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&display=swap');
+    body, html { margin: 0; padding: 0; height: 100%; font-family: 'DM Sans', sans-serif; background-color: #000; color: #fff; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    
+    .blob { box-shadow: 0 0 150px 100px #ae00ff; border-radius: 50%; height: 290px; width: 290px; background-image: radial-gradient(farthest-corner at 50% 50%, #ffffff, #ff00d4); background-blend-mode: multiply; filter: blur(50px) contrast(1.1); position: fixed; transform: translate(-50%, -50%); left: 47vw; top: 100vh; position: absolute; z-index: 0; }
+    .blobbig { box-shadow: 0 0 150px 100px #4400ff; border-radius: 100%; height: 45vh; width: 75vw; opacity: 0.15; background-image: radial-gradient(farthest-corner at 50% 50%, #ffffff, #8400ff); background-blend-mode: multiply; filter: blur(50px) contrast(1.1); position: fixed; transform: translate(-50%, -35%); left: 47vw; top: 100vh; position: absolute; z-index: 0; }
+    .blobsmall { box-shadow: 0 0 150px 50px #8400ff; border-radius: 50%; height: 50px; width: 340px; background-image: radial-gradient(farthest-corner at 50% 50%, #ffffff, #ff00d4); background-blend-mode: multiply; filter: blur(50px) contrast(1.1); position: fixed; transform: translate(-50%, -50%); left: 47vw; top: 100vh; position: absolute; z-index: 0; }
+    
+    #particles-js { position: absolute; width: 100%; height: 100%; z-index: 1; }
+    
+    .container { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; margin-top: -50px; }
+    
+    .search-bar { display: flex; align-items: center; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 30px; padding: 12px 24px; width: 650px; margin-bottom: 50px; transition: 0.2s; box-shadow: 0 4px 20px rgba(0,0,0,0.3); backdrop-filter: blur(5px); }
+    .search-bar:focus-within { border-color: rgba(255,255,255,0.2); }
+    .search-bar img { height: 24px; margin-right: 12px; }
+    .search-bar input { background: transparent; border: none; color: #fff; font-size: 18px; outline: none; width: 100%; font-family: 'DM Sans', sans-serif; }
+    .search-bar input::placeholder { color: #888; }
+    .search-bar svg { width: 22px; height: 22px; fill: #666; margin-left: auto; cursor: pointer; }
+
+    .cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; width: 880px; }
+    
+    .card {
+      border-radius: 14px; height: 75px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: white; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border: none; outline: none; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: 'DM Sans', sans-serif;
+    }
+    .card:hover { transform: scale(1.03) translateY(-2px); }
+    .card img { height: 32px; flex-shrink: 0; }
+    
+    .c-google { background: #fff; color: #000; }
+    .c-google img { height: 28px; }
+    .c-youtube { background: #fff; color: #000; }
+    .c-youtube img { height: 28px; }
+    .c-spotify { background: #1DB954; }
+    .c-spotify img { height: 36px; filter: brightness(0) invert(1); }
+    .c-discord { background: #5865F2; }
+    .c-discord img { height: 24px; filter: brightness(0) invert(1); }
+    .c-chatgpt { background: #10A37F; }
+    .c-chatgpt img { height: 26px; filter: brightness(0) invert(1); }
+    .c-geforce { background: #76B900; color: #000; }
+    .c-geforce img { height: 28px; }
+    .c-github { background: #111; border: 1px solid #333; }
+    .c-github img { height: 36px; }
+    .c-twitch { background: #9146FF; }
+    .c-twitch img { height: 32px; }
+    .c-espn { background: #CC0000; color: #fff; }
+    .c-tiktok { background: #111; border: 1px solid #333; }
+    .c-tiktok img { height: 28px; filter: brightness(0) invert(1); }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+</head>
+<body>
+  <div class="blobbig"></div>
+  <div class="blob"></div>
+  <div class="blobsmall"></div>
+  <div id="particles-js"></div>
+  <div class="container">
+    <div class="search-bar">
+      <img src="https://api.iconify.design/logos:google-icon.svg">
+      <input type="text" placeholder="Search Space..." id="q" onkeydown="if(event.key==='Enter') navigate(this.value);" autocomplete="off" />
+      <svg viewBox="0 0 18 18"><path d="M7.132 0C3.197 0 0 3.124 0 6.97c0 3.844 3.197 6.969 7.132 6.969 1.557 0 2.995-.49 4.169-1.32L16.82 18 18 16.847l-5.454-5.342a6.846 6.846 0 0 0 1.718-4.536C14.264 3.124 11.067 0 7.132 0zm0 .82c3.48 0 6.293 2.748 6.293 6.15 0 3.4-2.813 6.149-6.293 6.149S.839 10.37.839 6.969C.839 3.568 3.651.82 7.132.82z"></path></svg>
+    </div>
+    
+    <div class="cards">
+      <button class="card c-google" onclick="navigate('https://google.com')"><img src="https://api.iconify.design/logos:google.svg"></button>
+      <button class="card c-youtube" onclick="navigate('https://youtube.com')"><img src="https://api.iconify.design/logos:youtube.svg"></button>
+      <button class="card c-spotify" onclick="navigate('https://open.spotify.com')"><img src="https://api.iconify.design/logos:spotify.svg"></button>
+      <button class="card c-discord" onclick="navigate('https://discord.com/app')"><img src="https://api.iconify.design/logos:discord.svg"></button>
+      <button class="card c-chatgpt" onclick="navigate('https://chatgpt.com')"><img src="https://api.iconify.design/logos:openai-icon.svg"><span style="font-size:20px; font-weight:600">ChatGPT</span></button>
+
+      <button class="card c-geforce" onclick="navigate('https://play.geforcenow.com')"><img src="https://api.iconify.design/simple-icons:nvidia.svg?color=black"><span style="font-size:16px; font-weight:900; letter-spacing:-0.5px; text-transform:uppercase">NVIDIA<br/>GEFORCE NOW</span></button>
+      <button class="card c-github" onclick="navigate('https://github.com')"><img src="https://api.iconify.design/mdi:github.svg?color=white"><span style="font-size:22px; font-weight:700">GitHub</span></button>
+      <button class="card c-twitch" onclick="navigate('https://twitch.tv')"><img src="https://api.iconify.design/logos:twitch.svg" style="height:35px"></button>
+      <button class="card c-espn" onclick="navigate('https://espn.com')"><span style="font-size:38px; font-weight:900; letter-spacing:-2.5px; font-style:italic">ESPN</span></button>
+      <button class="card c-tiktok" onclick="navigate('https://tiktok.com')"><img src="https://api.iconify.design/logos:tiktok-icon.svg"><span style="font-size:22px; font-weight:700">TikTok</span></button>
+    </div>
+  </div>
+  
+  <script>
+    function navigate(url) {
+      if(!url.trim()) return;
+      if(!url.startsWith('http') && !url.includes('.')) url = 'https://google.com/search?q=' + encodeURIComponent(url);
+      else if (!url.startsWith('http')) url = 'https://' + url;
+      window.parent.postMessage({ type: 'scramjet-navigate', url: url }, '*');
+    }
+    document.getElementById('q').focus();
+    particlesJS('particles-js', {
+      particles: { number: { value: 86, density: { enable: true, value_area: 800 } }, color: { value: '#ffffff' }, size: { value: 2, random: true }, opacity: { value: 1, random: true }, line_linked: { enable: false }, move: { enable: true, speed: 0.5, direction: 'top' } }
+    });
+  </script>
+</body>
+</html>`;
+		const encoded = btoa(unescape(encodeURIComponent(htmlStart)));
+		if (!this.url || this.url === "about:space") {
+			frame.go(`data:text/html;base64,${encoded}`);
+		} else {
+			frame.go(this.url);
+		}
 	};
 
 	frame.addEventListener("urlchange", (e) => {
 		if (!e.url) return;
-		this.url = e.url;
+		if (e.url.startsWith("data:text/html")) {
+			this.url = ""; 
+		} else {
+			this.url = e.url;
+		}
 	});
 
 	const handleSubmit = () => {
-		this.url = this.url.trim();
-		if (!this.url.startsWith("http")) {
-			this.url = "https://" + this.url;
+		let target = this.url.trim();
+		if (!target) {
+			this.url = "about:space";
+			this.mount();
+			return;
 		}
-
-		return frame.go(this.url);
+		if (!target.startsWith("http") && target.includes(".")) {
+			target = "https://" + target;
+		} else if (!target.startsWith("http")) {
+			target = "https://google.com/search?q=" + encodeURIComponent(target);
+		}
+		this.url = target;
+		return frame.go(target);
 	};
-
-	const cfg = h(Config);
-	document.body.appendChild(cfg);
 
 	return html`
 		<div>
-			<div class="controls">
-				<div class="tabs">
-					<div class="tab active">
-						<span>${use(this.url)}</span>
-						<i class="fas fa-times closetab" on:click=${this.onCloseProxy}></i>
+			<ul class="navbar">
+				<li style="margin-left: 0px; margin-top: 10px; margin-bottom: 5px;">
+					<img class="logo" src="https://dev.desmos.live.cdn.cloudflare.net/assets/logo.webp" alt="Logo" onerror="this.src='https://api.dicebear.com/7.x/initials/png?seed=D&backgroundColor=111111&textColor=ffffff'" />
+				</li>
+				<hr style="margin-top: 5px" />
+				<li><span class="material-symbols-outlined" on:click=${this.onCloseProxy}>cottage</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onCloseProxy}>joystick</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onCloseProxy}>apps</span></li>
+				<li><span id="navactive" class="material-symbols-outlined">public</span></li>
+				<hr />
+				<li><span class="material-symbols-outlined" on:click=${this.onSettings}>tune</span></li>
+				<li><i class="fa-brands fa-discord" style="margin-top: 10px; font-size: 22px;"></i></li>
+			</ul>
+
+			<div class="utilityBar">
+				<ul class="utility">
+					<li>
+						<div class="utilityIcon" on:click=${() => frame.back()}>
+							<span class="material-symbols-outlined">arrow_back</span>
+						</div>
+					</li>
+					<li>
+						<div class="utilityIcon" on:click=${() => frame.reload()}>
+							<span class="material-symbols-outlined">refresh</span>
+						</div>
+					</li>
+					<li>
+						<div class="utilityIcon" on:click=${() => frame.forward()}>
+							<span class="material-symbols-outlined">arrow_forward</span>
+						</div>
+					</li>
+					<hr />
+					<div class="search-header">
+						<button class="search-header__button">
+							<svg fill="none" viewBox="0 0 18 18" height="18" width="18"><path fill="#868686" d="M7.132 0C3.197 0 0 3.124 0 6.97c0 3.844 3.197 6.969 7.132 6.969 1.557 0 2.995-.49 4.169-1.32L16.82 18 18 16.847l-5.454-5.342a6.846 6.846 0 0 0 1.718-4.536C14.264 3.124 11.067 0 7.132 0zm0 .82c3.48 0 6.293 2.748 6.293 6.15 0 3.4-2.813 6.149-6.293 6.149S.839 10.37.839 6.969C.839 3.568 3.651.82 7.132.82z"></path></svg>
+						</button>
+						<input 
+							class="search-header__input"
+							type="text"
+							placeholder="Enter search or web address"
+							id="gointospace2"
+							bind:value=${use(this.url)} 
+							on:input=${(e) => { this.url = e.target.value; }} 
+							on:keydown=${(e) => e.keyCode == 13 && (store.url = this.url) && handleSubmit()}
+						/>
 					</div>
-					<button id="newtab" on:click=${this.onCloseProxy}>
-						<i class="fas fa-plus"></i>
-					</button>
-				</div>
-				<div class="toolbar">
-					<button on:click=${() => frame.back()}>
-						<i class="fas fa-arrow-left"></i>
-					</button>
-					<button on:click=${() => frame.forward()}>
-						<i class="fas fa-arrow-right"></i>
-					</button>
-					<button on:click=${() => frame.reload()}>
-						<i class="fas fa-rotate-right"></i>
-					</button>
-					<input
-						type="text"
-						placeholder="Search for something or enter a URL here..."
-						id="bar"
-						bind:value=${use(this.url)} 
-						on:input=${(e) => { this.url = e.target.value; }} 
-						on:keyup=${(e) => e.keyCode == 13 && (store.url = this.url) && handleSubmit()}
-					/>
-					<button on:click=${() => window.open(scramjet.encodeUrl(this.url))}>
-						<i class="fas fa-external-link-alt"></i>
-					</button>
-					<button on:click=${() => document.documentElement.requestFullscreen()}>
-						<i class="fas fa-expand"></i>
-					</button>
-					<button on:click=${() => cfg.showModal()}>
-						<i class="fas fa-cog"></i>
-					</button>
-				</div>
-				<div class="bookmarks">
-					<div class="bookmark">
-						<i class="fas fa-plus" style="color: white"></i>
-						<span>New Bookmark</span>
-					</div>
-				</div>
+					<hr style="margin-left: 0; min-width: 1px" />
+					<li>
+						<div class="utilityIcon" on:click=${() => { this.url = ""; store.url = ""; this.mount(); }}>
+							<span class="material-symbols-outlined">cottage</span>
+						</div>
+					</li>
+					<li>
+						<div class="utilityIcon">
+							<span class="material-symbols-outlined">code</span>
+						</div>
+					</li>
+					<li>
+						<div class="utilityIcon" on:click=${() => document.documentElement.requestFullscreen()}>
+							<span class="material-symbols-outlined">fullscreen</span>
+						</div>
+					</li>
+					<li>
+						<div class="utilityIcon" on:click=${() => window.open(scramjet.encodeUrl(this.url))} style="margin-right: 10px">
+							<span class="material-symbols-outlined">instant_mix</span> 
+						</div>
+					</li>
+				</ul>
 			</div>
-			${frame.frame}
+
+			<div class="proxyWrapper">
+				${frame.frame}
+			</div>
 		</div>
 	`;
 }
@@ -443,10 +524,6 @@ function HomeScreen() {
 			text-align: center;
 			box-shadow: 1px 0 1px 0 rgba(66, 66, 66, 0.86);
 			z-index: 100;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 10px;
 		}
 
 		.navbar hr {
@@ -456,6 +533,7 @@ function HomeScreen() {
 			border: none;
 			margin-top: 10px;
 			margin-bottom: 5px;
+			display: inline-block;
 		}
 
 		.navbar span, .navbar i {
@@ -464,6 +542,7 @@ function HomeScreen() {
 			color: var(--text-color);
 			transition: 0.12s;
 			cursor: pointer;
+			display: inline-block;
 		}
 
 		.navbar span:hover, .navbar i:hover {
@@ -629,6 +708,53 @@ function HomeScreen() {
 			0% { transform: translateY(50px); opacity: 0; }
 			100% { transform: translateY(0); opacity: 1; }
 		}
+
+		.info-widget {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			display: flex;
+			flex-direction: column;
+			align-items: flex-end;
+			gap: 5px;
+			z-index: 100;
+			background: rgba(22, 22, 22, 0.4);
+			backdrop-filter: blur(10px);
+			padding: 15px 20px;
+			border-radius: 20px;
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			color: rgba(255, 255, 255, 0.8);
+			font-family: 'DM Sans', sans-serif;
+			box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+			animation: fade-in-top 0.6s ease-in-out;
+		}
+
+		.info-widget .time {
+			font-size: 32px;
+			font-weight: 700;
+			color: #fff;
+			line-height: 1;
+		}
+
+		.info-widget .date {
+			font-size: 14px;
+			opacity: 0.8;
+			margin-bottom: 5px;
+		}
+
+		.info-widget .row {
+			display: flex;
+			gap: 15px;
+			font-size: 14px;
+			font-weight: 500;
+			margin-top: 5px;
+		}
+
+		.info-widget .item {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
 	`;
 
 	this.searchQuery = "";
@@ -668,6 +794,61 @@ function HomeScreen() {
 				retina_detect: true
 			});
 		}
+
+		// Widget Logic
+		const updateTime = () => {
+			const timeEl = document.getElementById('widget-time');
+			const dateEl = document.getElementById('widget-date');
+			if (!timeEl || !dateEl) return;
+			const now = new Date();
+			timeEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+			dateEl.innerText = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+		};
+		updateTime();
+		setInterval(updateTime, 1000);
+
+		const batteryEl = document.getElementById('widget-battery');
+		if (navigator.getBattery && batteryEl) {
+			navigator.getBattery().then(battery => {
+				const updateBattery = () => {
+					let icon = 'fa-battery-full';
+					if (battery.level <= 0.2) icon = 'fa-battery-empty';
+					else if (battery.level <= 0.5) icon = 'fa-battery-quarter';
+					else if (battery.level <= 0.8) icon = 'fa-battery-half';
+					if (battery.charging) icon = 'fa-bolt';
+					batteryEl.innerHTML = '<i class="fas ' + icon + '"></i> ' + Math.round(battery.level * 100) + '%';
+				};
+				updateBattery();
+				battery.addEventListener('levelchange', updateBattery);
+				battery.addEventListener('chargingchange', updateBattery);
+			});
+		} else if (batteryEl) {
+			batteryEl.style.display = 'none';
+		}
+
+		const weatherEl = document.getElementById('widget-weather');
+		if (weatherEl) {
+			fetch('https://get.geojs.io/v1/ip/geo.json')
+				.then(res => res.json())
+				.then(geo => fetch('https://api.open-meteo.com/v1/forecast?latitude=' + geo.latitude + '&longitude=' + geo.longitude + '&current_weather=true&temperature_unit=fahrenheit'))
+				.then(res => res.json())
+				.then(data => {
+					if (data.current_weather) {
+						const temp = Math.round(data.current_weather.temperature);
+						let icon = 'fa-cloud';
+						const code = data.current_weather.weathercode;
+						if (code === 0) icon = 'fa-sun';
+						else if (code >= 1 && code <= 3) icon = 'fa-cloud-sun';
+						else if (code >= 51 && code <= 67) icon = 'fa-cloud-rain';
+						else if (code >= 71 && code <= 77) icon = 'fa-snowflake';
+						else if (code >= 95) icon = 'fa-bolt';
+						weatherEl.innerHTML = '<i class="fas ' + icon + '"></i> ' + temp + '°F';
+					}
+				})
+				.catch(e => {
+					weatherEl.innerHTML = '<i class="fas fa-cloud-slash"></i> N/A';
+				});
+		}
 	}, 100);
 
 	const randomMessages = [
@@ -684,15 +865,24 @@ function HomeScreen() {
 
 	return html`
 		<div style="height: 100%; width: 100%;">
+			<div class="info-widget">
+				<div class="time" id="widget-time">--:--</div>
+				<div class="date" id="widget-date">---</div>
+				<div class="row">
+					<div class="item" id="widget-weather"><i class="fas fa-spinner fa-spin"></i></div>
+					<div class="item" id="widget-battery"><i class="fas fa-battery-half"></i> --%</div>
+				</div>
+			</div>
+
 			<ul class="navbar">
 				<li style="margin-top: 10px;"></li>
 				<hr />
 				<li><span id="navactive" class="material-symbols-outlined">cottage</span></li>
-				<li><span class="material-symbols-outlined">joystick</span></li>
-				<li><span class="material-symbols-outlined">apps</span></li>
-				<li><span class="material-symbols-outlined">public</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onGames}>joystick</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onApps}>apps</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onOpenProxy}>public</span></li>
 				<hr />
-				<li><span class="material-symbols-outlined">tune</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onSettings}>tune</span></li>
 				<li><i class="fa-brands fa-discord"></i></li>
 			</ul>
 
@@ -730,8 +920,1151 @@ function HomeScreen() {
 	`;
 }
 
+function GamesScreen() {
+	this.css = `
+		--background-color: #000;
+		--header-active-background-color: rgba(140, 0, 255, 0.55);
+		--header-hover-background-color: rgba(140, 0, 255, 0.13);
+		--navbar-background-color: rgb(22, 22, 22);
+		--hr-background: rgba(160, 160, 160, 0.274);
+		--text-color: #ffffff;
+		--link-hover-color: #7d2ae8;
+
+		background-color: var(--background-color);
+		font-family: 'DM Sans', sans-serif;
+		height: 100%;
+		width: 100%;
+		position: relative;
+		overflow: hidden;
+		color: var(--text-color);
+
+		.navbar {
+			list-style-type: none;
+			padding-left: 5px;
+			padding-right: 5px;
+			padding-top: 5px;
+			margin: 0;
+			direction: ltr;
+			width: 3.5em;
+			height: 100%;
+			background-color: var(--navbar-background-color);
+			position: fixed;
+			left: 0;
+			top: 0;
+			text-align: center;
+			box-shadow: 1px 0 1px 0 rgba(66, 66, 66, 0.86);
+			z-index: 100;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 10px;
+		}
+		.navbar hr { width: 40px; height: 1px; background: var(--hr-background); border: none; margin-top: 10px; margin-bottom: 5px; }
+		.navbar span, .navbar i { font-size: 24px; padding: 10px; color: var(--text-color); transition: 0.12s; cursor: pointer; }
+		.navbar span:hover, .navbar i:hover { background-color: var(--header-hover-background-color); border-radius: 7px; }
+		#navactive { background-color: var(--header-active-background-color); border-radius: 7px; }
+
+		.games-container {
+			margin-left: 4.5em; /* past navbar */
+			padding: 40px;
+			height: 100vh;
+			overflow-y: auto;
+			box-sizing: border-box;
+			position: relative;
+			z-index: 10;
+		}
+
+		.games-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+			gap: 20px;
+			margin-top: 20px;
+		}
+
+		.game-card {
+			background: #121212;
+			border-radius: 12px;
+			overflow: hidden;
+			cursor: pointer;
+			transition: transform 0.2s, box-shadow 0.2s;
+			border: 1px solid rgba(255,255,255,0.05);
+			display: flex;
+			flex-direction: column;
+		}
+
+		.game-card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 10px 20px rgba(140, 0, 255, 0.3);
+			border-color: rgba(140, 0, 255, 0.5);
+		}
+
+		.game-cover {
+			width: 100%;
+			height: 180px;
+			object-fit: cover;
+			background: #1a1a1a;
+		}
+
+		.game-title {
+			padding: 15px;
+			font-size: 15px;
+			font-weight: 600;
+			text-align: center;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.games-header {
+			font-size: 40px;
+			font-weight: 700;
+			color: #fff;
+			text-shadow: 0 0 20px rgba(140, 0, 255, 0.5);
+			margin-bottom: 30px;
+		}
+
+		.loading {
+			text-align: center;
+			margin-top: 50px;
+			font-size: 20px;
+			color: #888;
+		}
+
+		.blobbig {
+			box-shadow: 0 0 150px 100px var(--link-hover-color);
+			border-radius: 100%;
+			height: 45vh;
+			width: 75vw;
+			opacity: 0.15;
+			background-image: radial-gradient(farthest-corner at 50% 50%, #ffffff, #8400ff);
+			background-blend-mode: multiply;
+			filter: blur(50px) contrast(1.1);
+			position: absolute;
+			transform: translate(-50%, -35%);
+			left: 47vw;
+			top: 100vh;
+			z-index: 1;
+		}
+
+		.game-overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100vw;
+			height: 100vh;
+			background: #000;
+			z-index: 1000;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.game-overlay-header {
+			height: 50px;
+			background: #111;
+			display: flex;
+			justify-content: flex-start;
+			align-items: center;
+			padding: 0 20px;
+			border-bottom: 1px solid rgba(255,255,255,0.05);
+		}
+
+		.game-overlay-header button {
+			background: rgba(255,255,255,0.1);
+			border: none;
+			color: white;
+			padding: 8px 15px;
+			border-radius: 6px;
+			cursor: pointer;
+			font-family: 'DM Sans', sans-serif;
+			font-size: 14px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			transition: 0.2s;
+		}
+
+		.game-overlay-header button:hover {
+			background: rgba(255,255,255,0.2);
+			transform: scale(1.05);
+		}
+
+		.game-overlay-content {
+			flex: 1;
+			width: 100%;
+			background: #000;
+		}
+		
+		#game-content-frame {
+			width: 100%;
+			height: 100%;
+			border: none;
+			background: #fff;
+		}
+	`;
+
+	this.games = [];
+	this.loading = true;
+	this.activeGameUrl = null;
+
+	const sources = ['gnmath'];
+	Promise.all(sources.map(s => 
+		fetch('https://useducationcenter.org/asset/json/zones/' + s + '.json')
+			.then(r => r.json())
+			.catch(() => [])
+	)).then(results => {
+		const allGames = [];
+		const seen = new Set();
+		for (const list of results) {
+			for (const g of list) {
+				if (!seen.has(g.name)) {
+					seen.add(g.name);
+					allGames.push(g);
+				}
+			}
+		}
+		this.games = allGames;
+		this.loading = false;
+	});
+
+	this.openGame = (gameObj) => {
+		let finalUrl = gameObj.url;
+		if (finalUrl.startsWith('/')) {
+			finalUrl = 'https://useducationcenter.org' + finalUrl;
+		}
+
+		if (finalUrl.includes('freebuisness')) {
+			finalUrl = finalUrl.replace('freebuisness/html', 'gn-math/html');
+			// Fix known renamed files from the gn-math repository
+			if (finalUrl.includes('1-a.html')) finalUrl = finalUrl.replace('1-a.html', '1-fde.html');
+			if (finalUrl.includes('112.html')) finalUrl = finalUrl.replace('112.html', '112-fix.html');
+			if (finalUrl.includes('117.html')) finalUrl = finalUrl.replace('117.html', '117-fix.html');
+			if (finalUrl.includes('123.html')) finalUrl = finalUrl.replace('123.html', '123-win.html');
+			if (finalUrl.includes('196.html')) finalUrl = finalUrl.replace('196.html', '196-fixed.html');
+		}
+
+		// jsdelivr blocked gn-math, fetch from github directly or via raw githack
+		if (finalUrl.includes('cdn.jsdelivr.net/gh/')) {
+			finalUrl = finalUrl.replace('https://cdn.jsdelivr.net/gh/', 'https://raw.githubusercontent.com/').replace('@', '/');
+		}
+		
+		this.activeGameUrl = finalUrl;
+
+		setTimeout(async () => {
+			const container = document.querySelector('.game-overlay-content');
+			if (!container) return;
+			
+			container.innerHTML = '<iframe id="game-content-frame"></iframe>';
+			let iframe = document.getElementById('game-content-frame');
+
+			const attemptLoad = async (urlToLoad) => {
+				if (urlToLoad.includes('cdn.jsdelivr.net/gh/')) {
+					urlToLoad = urlToLoad.replace('https://cdn.jsdelivr.net/gh/', 'https://raw.githubusercontent.com/').replace('@', '/');
+				}
+
+				if (urlToLoad.includes('raw.githubusercontent.com')) {
+					const res = await fetch(urlToLoad + '?t=' + Date.now());
+					if (!res.ok) throw new Error("Game file not found on GitHub");
+					const html = await res.text();
+					if (html.includes("Couldn't find the requested file") || html === '404: Not Found') {
+						throw new Error("File not found message in response");
+					}
+					iframe.contentDocument.open();
+					iframe.contentDocument.write(html);
+					iframe.contentDocument.close();
+				} else {
+					const frame = scramjet.createFrame();
+					frame.id = 'game-content-frame';
+					frame.style.width = '100%';
+					frame.style.height = '100%';
+					frame.style.border = 'none';
+					frame.style.background = '#fff';
+					iframe.replaceWith(frame);
+					iframe = frame;
+					frame.go(urlToLoad);
+				}
+			};
+
+			try {
+				await attemptLoad(finalUrl);
+			} catch (e) {
+				// primary URL loading failed, quietly attempting backups before logging
+				try {
+					const backupSources = ['gnports', 'truffled', 'ugs', 'tglsc', 'selenite', 'seraph', '3kh0'];
+					let foundBackup = false;
+					for (const s of backupSources) {
+						if (foundBackup) break;
+						try {
+							const r = await fetch('https://useducationcenter.org/asset/json/zones/' + s + '.json');
+							const data = await r.json();
+							const backupGame = data.find(g => g.name.toLowerCase() === gameObj.name.toLowerCase() && g.url !== gameObj.url);
+							if (backupGame) {
+								let backupUrl = backupGame.url;
+								if (backupUrl.startsWith('/')) backupUrl = 'https://useducationcenter.org' + backupUrl;
+								// We found a backup, load it silently
+								await attemptLoad(backupUrl);
+								foundBackup = true;
+							}
+						} catch (err) {}
+					}
+					
+					if (!foundBackup) {
+						// If no backups work, just show error
+						iframe.contentDocument.open();
+						iframe.contentDocument.write(`<h2>Sorry, this game's file is broken or missing! (404 Not Found)</h2><p>We tried looking for backups but couldn't find any for ${gameObj.name}.</p>`);
+						iframe.contentDocument.close();
+					}
+				} catch (err) {
+					iframe.contentDocument.open();
+					iframe.contentDocument.write(`<h2>Sorry, this game's file is broken or missing! (404 Not Found)</h2><p>We tried looking for backups but couldn't find any for ${gameObj.name}.</p>`);
+					iframe.contentDocument.close();
+				}
+			}
+		}, 50);
+	};
+
+	this.closeGame = () => {
+		this.activeGameUrl = null;
+	};
+
+	return html`
+		<div style="height: 100%; width: 100%;">
+			${use(this.activeGameUrl, active => active ? html`
+				<div class="game-overlay">
+					<div class="game-overlay-header">
+						<button on:click=${this.closeGame}>
+							<i class="ri-arrow-left-line"></i> Back to Arcades
+						</button>
+					</div>
+					<div class="game-overlay-content">
+						<iframe id="game-content-frame"></iframe>
+					</div>
+				</div>
+			` : '')}
+
+			<ul class="navbar">
+				<li style="margin-top: 10px;"></li>
+				<hr />
+				<li><span class="material-symbols-outlined" on:click=${this.onHome}>cottage</span></li>
+				<li><span id="navactive" class="material-symbols-outlined">joystick</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onApps}>apps</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onOpenProxy}>public</span></li>
+				<hr />
+				<li><span class="material-symbols-outlined" on:click=${this.onSettings}>tune</span></li>
+				<li><i class="fa-brands fa-discord"></i></li>
+			</ul>
+
+			<div class="blobbig"></div>
+
+			<div class="games-container">
+				<div class="games-header">Games Arcades</div>
+				
+				${use(this.loading, l => l ? html`<div class="loading">Loading games...</div>` : '')}
+				
+				<div class="games-grid">
+					${use(this.games, games => games.map(game => html`
+						<div class="game-card" on:click=${() => this.openGame(game)}>
+							<img class="game-cover" src=${game.cover || 'https://via.placeholder.com/150'} loading="lazy" alt=${game.name} />
+							<div class="game-title">${game.name}</div>
+						</div>
+					`))}
+				</div>
+			</div>
+		</div>
+	`;
+}
+
+function AppsScreen() {
+	this.searchQuery = '';
+	this.css = `
+		--background-color: #000;
+		--header-active-background-color: rgba(140, 0, 255, 0.55);
+		--header-hover-background-color: rgba(140, 0, 255, 0.13);
+		--navbar-background-color: rgb(22, 22, 22);
+		--hr-background: rgba(160, 160, 160, 0.274);
+		--text-color: #ffffff;
+		--input-background-color: #0a0a0a;
+		--border-color: #525252;
+		--dshadow1: #ae00ff;
+		--dshadow2: #4400ff;
+		
+		background-color: var(--background-color);
+		font-family: 'DM Sans', sans-serif;
+		height: 100%;
+		width: 100%;
+		position: relative;
+		overflow: hidden;
+		color: var(--text-color);
+
+		.navbar {
+			list-style-type: none;
+			padding-left: 5px;
+			padding-right: 5px;
+			padding-top: 5px;
+			margin: 0;
+			direction: ltr;
+			width: 3.5em;
+			height: 100%;
+			background-color: var(--navbar-background-color);
+			position: fixed;
+			left: 0;
+			top: 0;
+			text-align: center;
+			box-shadow: 1px 0 1px 0 rgba(66, 66, 66, 0.86);
+			z-index: 100;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.navbar hr { width: 40px; height: 1px; background: var(--hr-background); border: none; margin-top: 10px; margin-bottom: 5px; }
+		.navbar span, .navbar i { font-size: 24px; padding: 10px; color: var(--text-color); transition: 0.12s; cursor: pointer; }
+		.navbar span:hover, .navbar i:hover { background-color: var(--header-hover-background-color); border-radius: 7px; }
+		#navactive { background-color: var(--header-active-background-color); border-radius: 7px; }
+
+		.apps-container {
+			margin-left: 4.5em; /* past navbar */
+			padding: 40px;
+			height: 100vh;
+			overflow-y: auto;
+			box-sizing: border-box;
+			position: relative;
+			z-index: 10;
+		}
+
+		.search-header {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+			border-radius: 30px;
+			margin-bottom: 40px;
+		}
+
+		.search-header__input {
+			font-family: 'DM Sans';
+			font-size: 16px;
+			background-color: var(--input-background-color);
+			border: solid 0.5px var(--border-color);
+			color: var(--text-color);
+			padding: 0.7rem 1.5rem;
+			border-radius: 25px;
+			width: 300px;
+			height: 45px;
+			transition: all ease-in-out 0.5s;
+			text-align: center;
+			box-sizing: border-box;
+		}
+
+		.search-header__input:hover,
+		.search-header__input:focus {
+			box-shadow: 10px 5px 40px -10px var(--dshadow1), -14px -4px 40px -10px var(--dshadow2);
+			width: 350px;
+			outline: none;
+			background-color: #0a0a0af0;
+		}
+
+		.search-header__input::-webkit-input-placeholder {
+			font-weight: 200;
+			color: #868686;
+		}
+
+		.apps-grid {
+			display: grid;
+			grid-template-columns: repeat(5, 1fr);
+			gap: 15px;
+			max-width: 1100px;
+			margin: 0 auto;
+		}
+
+		@media (max-width: 1200px) {
+			.apps-grid { grid-template-columns: repeat(4, 1fr); }
+		}
+
+		@media (max-width: 900px) {
+			.apps-grid { grid-template-columns: repeat(3, 1fr); }
+		}
+
+		@media (max-width: 600px) {
+			.apps-grid { grid-template-columns: repeat(2, 1fr); }
+		}
+
+		.app-card {
+			background: #111;
+			border-radius: 12px;
+			height: 120px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 12px;
+			cursor: pointer;
+			transition: transform 0.2s, box-shadow 0.2s;
+			text-decoration: none;
+			color: #fff;
+			overflow: hidden;
+			position: relative;
+			border: 1px solid rgba(255,255,255,0.05);
+		}
+
+		.app-card.gradient {
+			background: linear-gradient(135deg, #1e003b 0%, #4400ff 100%);
+		}
+
+		.app-card:hover {
+			transform: scale(1.03);
+			box-shadow: 0 10px 20px rgba(140, 0, 255, 0.2);
+			border-color: rgba(140, 0, 255, 0.4);
+		}
+
+		.app-card img {
+			width: 64px;
+			height: 64px;
+			border-radius: 12px;
+			object-fit: contain;
+			background: transparent;
+		}
+
+		.app-card span {
+			font-size: 14px;
+			font-weight: 600;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			max-width: 90%;
+			text-align: center;
+		}
+		
+		#particles-apps {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			left: 0;
+			z-index: 1;
+		}
+	`;
+
+	const appsList = [
+		{ name: "Request a app", url: "https://docs.google.com/forms", customImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Google_Forms_icon_2014.png/640px-Google_Forms_icon_2014.png", gradient: true },
+		{ name: "Amazon", url: "https://amazon.com", domain: "amazon.com" },
+		{ name: "Luna", url: "https://luna.amazon.com", domain: "luna.amazon.com" },
+		{ name: "Character.ai", url: "https://character.ai", domain: "character.ai" },
+		{ name: "Chess.com", url: "https://chess.com", domain: "chess.com" },
+		{ name: "Coolmath Games", url: "https://coolmathgames.com", domain: "coolmathgames.com" },
+		{ name: "Discord", url: "https://discord.com/app", domain: "discord.com" },
+		{ name: "ESPN", url: "https://espn.com", domain: "espn.com" },
+		{ name: "FlixHQ", url: "https://flixhq.to", domain: "flixhq.to" },
+		{ name: "GeForce NOW", url: "https://play.geforcenow.com", domain: "geforcenow.com" },
+		{ name: "GitHub", url: "https://github.com", domain: "github.com" },
+		{ name: "HBO Max", url: "https://max.com", domain: "max.com" },
+		{ name: "Newgrounds", url: "https://newgrounds.com", domain: "newgrounds.com" },
+		{ name: "OpenAI", url: "https://chat.openai.com", domain: "openai.com" },
+		{ name: "Paramount+", url: "https://paramountplus.com", domain: "paramountplus.com" },
+		{ name: "Pinterest", url: "https://pinterest.com", domain: "pinterest.com" },
+		{ name: "Pixlr", url: "https://pixlr.com", domain: "pixlr.com" },
+		{ name: "Poki", url: "https://poki.com", domain: "poki.com" },
+		{ name: "CrazyGames", url: "https://crazygames.com", domain: "crazygames.com" },
+		{ name: "SnapChat", url: "https://snapchat.com", domain: "snapchat.com" },
+		{ name: "SoundCloud", url: "https://soundcloud.com", domain: "soundcloud.com" },
+		{ name: "Telegram", url: "https://web.telegram.org", domain: "telegram.org" },
+		{ name: "Temu", url: "https://temu.com", domain: "temu.com" },
+		{ name: "TikTok", url: "https://tiktok.com", domain: "tiktok.com" },
+		{ name: "Tumblr", url: "https://tumblr.com", domain: "tumblr.com" },
+		{ name: "Twitch", url: "https://twitch.tv", domain: "twitch.tv" },
+		{ name: "X", url: "https://x.com", domain: "x.com", customImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/X_logo_2023.svg/1200px-X_logo_2023.svg.png" },
+		{ name: "VS Code", url: "https://vscode.dev", domain: "vscode.dev" },
+		{ name: "Wattpad", url: "https://wattpad.com", domain: "wattpad.com" },
+		{ name: "RetroArch", url: "https://retroarch.com", domain: "retroarch.com" },
+		{ name: "Y8", url: "https://y8.com", domain: "y8.com" },
+		{ name: "YouTube", url: "https://youtube.com", domain: "youtube.com" }
+	];
+
+	this.openApp = (app) => {
+		store.url = app.url;
+		this.onOpenProxy();
+	};
+
+	setTimeout(() => {
+		if (window.particlesJS) {
+			window.particlesJS('particles-apps', {
+				particles: {
+					number: { value: 86, density: { enable: true, value_area: 800 } },
+					color: { value: '#ffffff' },
+					shape: { type: 'circle' },
+					opacity: { value: 0.5, random: false, anim: { enable: false } },
+					size: { value: 3, random: true, anim: { enable: false } },
+					line_linked: { enable: true, distance: 150, color: '#ffffff', opacity: 0.4, width: 1 },
+					move: { enable: true, speed: 2, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false }
+				},
+				interactivity: {
+					detect_on: 'window',
+					events: { onhover: { enable: false }, onclick: { enable: true, mode: 'push' }, resize: true },
+					modes: { push: { particles_nb: 10 } }
+				},
+				retina_detect: true
+			});
+		}
+	}, 100);
+
+	return html`
+		<div style="height: 100%; width: 100%;">
+			<div id="particles-apps"></div>
+			<ul class="navbar">
+				<li style="margin-top: 10px;"></li>
+				<hr />
+				<li><span class="material-symbols-outlined" on:click=${this.onHome}>cottage</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onGames}>joystick</span></li>
+				<li><span id="navactive" class="material-symbols-outlined">apps</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onOpenProxy}>public</span></li>
+				<hr />
+				<li><span class="material-symbols-outlined" on:click=${this.onSettings}>tune</span></li>
+				<li><i class="fa-brands fa-discord"></i></li>
+			</ul>
+
+			<div class="apps-container">
+				<div class="search-header">
+					<input 
+						class="search-header__input"
+						type="text"
+						placeholder="Search Space for Apps..." 
+						bind:value=${use(this.searchQuery)}
+						on:input=${(e) => this.searchQuery = e.target.value}
+					/>
+				</div>
+				
+				<div class="apps-grid">
+					${use(this.searchQuery, query => {
+						const filtered = appsList.filter(a => a.name.toLowerCase().includes(query.toLowerCase()));
+						return filtered.map(app => {
+							const rawUrl = app.customImg || `https://www.google.com/s2/favicons?domain=${app.domain}&sz=128`;
+							let proxiedUrl = `https://wsrv.nl/?url=${encodeURIComponent(rawUrl)}`;
+							// Request a app and X use wikimedia which wsrv might block, use dicebear as direct fallback wrapped too
+							if(app.domain && !app.customImg) proxiedUrl += '&default=' + encodeURIComponent(`https://api.dicebear.com/7.x/initials/png?seed=${app.name}&backgroundColor=111111&textColor=ffffff`);
+							
+							return html`
+							<div class="app-card ${app.gradient ? 'gradient' : ''}" on:click=${() => this.openApp(app)}>
+								<img 
+									referrerPolicy="no-referrer"
+									crossorigin="anonymous"
+									src=${proxiedUrl} 
+									on:error=${(e) => { 
+										e.target.onerror = null; 
+										e.target.src = `https://wsrv.nl/?url=${encodeURIComponent('https://api.dicebear.com/7.x/initials/png?seed=' + app.name + '&backgroundColor=111111&textColor=ffffff')}`; 
+									}}
+									alt=${app.name} 
+								/>
+								<span>${app.name}</span>
+							</div>
+							`;
+						});
+					})}
+				</div>
+			</div>
+		</div>
+	`;
+}
+
+function SettingsScreen() {
+	this.css = `
+		--background-color: #000;
+		--header-active-background-color: rgba(140, 0, 255, 0.55);
+		--header-hover-background-color: rgba(140, 0, 255, 0.13);
+		--text-color: #ffffff;
+		--navbar-background-color: rgb(22, 22, 22);
+		--hr-background: rgba(160, 160, 160, 0.274);
+
+		background-color: var(--background-color);
+		height: 100%;
+		width: 100%;
+		position: relative;
+		overflow: hidden;
+
+		.navbar {
+			list-style-type: none;
+			padding-left: 5px;
+			padding-right: 5px;
+			padding-top: 5px;
+			margin: 0;
+			direction: ltr;
+			width: 3.5em;
+			height: 100%;
+			background-color: var(--navbar-background-color);
+			position: fixed;
+			left: 0;
+			top: 0;
+			text-align: center;
+			box-shadow: 1px 0 1px 0 rgba(0,0,0,0.86);
+			z-index: 2147483641;
+		}
+
+		.navbar img.logo {
+			width: 40px;
+			height: 40px;
+			border-radius: 10px;
+		}
+
+		.navbar hr { width: 40px; height: 1px; background: var(--hr-background); border: none; margin-top: 5px; margin-bottom: 5px; display: inline-block; }
+		.navbar span, .navbar i { font-size: 24px; padding: 10px; color: var(--text-color); transition: 0.12s; cursor: pointer; display: inline-block; }
+		.navbar span:hover, .navbar i:hover { background-color: var(--header-hover-background-color); border-radius: 7px; }
+		#navactive { background-color: var(--header-active-background-color); border-radius: 7px; color: white !important; }
+
+		#settingsShape {
+			background: radial-gradient(circle, rgba(140,0,255,0.4) 0%, rgba(0,0,0,0) 70%);
+			position: absolute;
+			width: 600px;
+			height: 600px;
+			z-index: -1;
+			left: -300px;
+			top: -300px;
+			opacity: 0.5;
+			pointer-events: none;
+		}
+
+		ul.sideSnav {
+			width: 250px; 
+			border-right: 1px solid rgba(255,255,255,0.05); 
+			padding: 20px; 
+			list-style: none; 
+			margin: 0; 
+			box-sizing: border-box; 
+			display: flex; 
+			flex-direction: column; 
+			gap: 5px;
+		}
+
+		ul.sideSnav h1 {
+			font-size: 24px; margin-top: 0; text-align: left; margin-bottom: 15px; color: white;
+		}
+
+		.settingItem {
+			padding: 10px;
+			border-radius: 8px;
+			transition: 0.2s;
+			display: flex;
+			align-items: center;
+			font-size: 14px;
+            cursor: pointer;
+            color: #aaa;
+		}
+		
+		.settingItem:hover {
+		    background-color: var(--header-hover-background-color);
+		}
+
+		.settingItem.active {
+			color: rgba(200, 50, 255, 1);
+			font-weight: bold;
+		}
+
+		.scontent {
+			flex: 1; 
+			padding: 40px; 
+			overflow-y: auto; 
+			text-align: left;
+			color: white;
+			font-family: inherit;
+		}
+
+		.scontent h1.tab-title {
+		    font-size: 22px;
+		    margin-bottom: 25px;
+		    margin-top: 0;
+		}
+
+		.settingsection {
+			background: rgba(255, 255, 255, 0.03);
+			border: 1px solid rgba(255, 255, 255, 0.05);
+			border-radius: 12px;
+			padding: 20px;
+			margin-bottom: 20px;
+		}
+
+		.settingsection h1 {
+			font-size: 18px;
+			margin-top: 0;
+			margin-bottom: 10px;
+			color: white;
+		}
+
+		.settingsection p {
+			color: #aaa;
+			font-size: 14px;
+			margin-bottom: 15px;
+			line-height: 1.5;
+		}
+
+		.dropdown {
+		    position: relative;
+		    display: inline-block;
+		    width: 100%;
+		    max-width: 400px;
+		}
+		
+		.dropdown-button {
+		    width: 100%;
+		    display: flex;
+		    justify-content: space-between;
+		    align-items: center;
+		    background: rgba(255, 255, 255, 0.05);
+		    border: 1px solid rgba(255, 255, 255, 0.1);
+		    color: white;
+		    padding: 10px 15px;
+		    border-radius: 8px;
+		    cursor: pointer;
+		}
+
+		.pgroup {
+			display: flex;
+			align-items: center;
+			background: rgba(0,0,0,0.5);
+			border: 1px solid rgba(255,255,255,0.1);
+			border-radius: 8px;
+			padding: 5px 10px;
+			margin-bottom: 15px;
+			max-width: 400px;
+		}
+		.picon { width: 20px; height: 20px; color: #888; margin-right: 10px; }
+		.pgroup input { background: transparent; border: none; color: white; outline: none; width: 100%; }
+
+		.splitbutton, .buttonreg {
+			background: rgba(255, 255, 255, 0.05);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			color: white;
+			padding: 10px 20px;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: 0.2s;
+			flex: 1;
+		}
+		.splitbutton:hover, .buttonreg:hover { background: rgba(255, 255, 255, 0.1); }
+
+		/* Toggle switch */
+		.switch { position: relative; display: inline-block; width: 40px; height: 20px; margin-bottom: 15px; }
+		.switch input { opacity: 0; width: 0; height: 0; }
+		.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 20px; }
+		.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: #aaa; transition: .4s; border-radius: 50%; }
+		input:checked + .slider { background-color: rgba(200, 50, 255, 0.5); }
+		input:checked + .slider:before { transform: translateX(20px); background-color: white; }
+
+		hr { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 15px 0; }
+	`;
+
+	this.activeTab = 'cloaking';
+
+	const changeTab = (tabId) => {
+		this.activeTab = tabId;
+		this.mount();
+	};
+
+	let transportOutput = store.transport;
+
+	return html`
+		<div style="height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; position: relative;">
+			<ul class="navbar" style="z-index: 2000;">
+				<li style="margin-left: 0px; margin-top: 10px; margin-bottom: 5px;">
+					<img class="logo" src="https://dev.desmos.live.cdn.cloudflare.net/assets/logo.webp" alt="Logo" onerror="this.src='https://api.dicebear.com/7.x/initials/png?seed=D&backgroundColor=111111&textColor=ffffff'" />
+				</li>
+				<hr style="margin-top: 5px" />
+				<li><span class="material-symbols-outlined" on:click=${this.onHome}>cottage</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onGames}>joystick</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onApps}>apps</span></li>
+				<li><span class="material-symbols-outlined" on:click=${this.onOpenProxy}>public</span></li>
+				<hr />
+				<li><span id="navactive" class="material-symbols-outlined">tune</span></li>
+				<li><i class="fa-brands fa-discord" style="margin-top: 10px; font-size: 22px;"></i></li>
+			</ul>
+
+			<div
+				class="header"
+				style="
+					display: inline-flex;
+					width: 1000px;
+					height: 650px;
+					backdrop-filter: blur(8px);
+					background-color: rgba(21, 21, 21, 0.4);
+					z-index: 10;
+					box-shadow: 0 0 15px -10px #fff;
+					border-radius: 27px;
+					position: relative;
+					overflow: hidden;
+					border: 1px solid rgba(255,255,255,0.05);
+				"
+			>
+				<ul class="sideSnav">
+					<h1>Settings</h1>
+					<div id="settingsShape" class="settingsShape"></div>
+					
+					<li class="settingItem ${this.activeTab === 'cloaking' ? 'active' : ''}" on:click=${() => changeTab('cloaking')}>
+						<span class="material-symbols-outlined" style="margin-right: 8px;">ad_group_off</span>Cloaking
+					</li>
+					<li class="settingItem ${this.activeTab === 'performance' ? 'active' : ''}" on:click=${() => changeTab('performance')}>
+						<span class="material-symbols-outlined" style="margin-right: 8px;">speed</span>Performance
+					</li>
+					<li class="settingItem ${this.activeTab === 'themes' ? 'active' : ''}" on:click=${() => changeTab('themes')}>
+						<span class="material-symbols-outlined" style="margin-right: 8px;">palette</span>Themes
+					</li>
+					<li class="settingItem ${this.activeTab === 'proxy' ? 'active' : ''}" on:click=${() => changeTab('proxy')}>
+						<span class="material-symbols-outlined" style="margin-right: 8px;">public</span>Proxy & Browser
+					</li>
+					
+					<hr style="margin: 10px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.05);" />
+					
+					<li class="settingItem ${this.activeTab === 'account' ? 'active' : ''}" on:click=${() => changeTab('account')}>
+						<span class="material-symbols-outlined" style="margin-right: 8px;">account_circle</span>Account
+					</li>
+					<li class="settingItem ${this.activeTab === 'about' ? 'active' : ''}" on:click=${() => changeTab('about')}>
+						<span class="material-symbols-outlined" style="margin-right: 8px;">help</span>About & Statistics
+					</li>
+					
+					<hr style="margin: 10px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.05);" />
+					
+					<li class="settingItem ${this.activeTab === 'news' ? 'active' : ''}" on:click=${() => changeTab('news')}>
+						<span class="material-symbols-outlined" style="margin-right: 8px;">rocket_launch</span>News & Updates
+					</li>
+					<li class="settingItem ${this.activeTab === 'faq' ? 'active' : ''}" on:click=${() => changeTab('faq')}>
+						<span class="material-symbols-outlined" style="margin-right: 8px;">contact_support</span>FAQ
+					</li>
+				</ul>
+				
+				<div class="scontent">
+					${this.activeTab === 'cloaking' ? html`
+						<h1 class="tab-title">Cloaking</h1>
+						<div class="settingsection">
+							<h1>About:Blank & Blob Cloaking</h1>
+							<p>About:Blank allows you to hide your tab history, and blockers such as GoGuardian by appearing that you are on a blank tab. If About:Blank doesn't work, then you can try using the blob cloaking which uses temporary data.</p>
+							<div style="display: flex; gap: 10px; width: 100%;">
+								<button class="splitbutton">Launch About:Blank</button>
+								<button class="splitbutton">Launch Blob</button>
+							</div>
+						</div>
+
+						<div class="settingsection">
+							<h1>Automatic cloaking</h1>
+							<p>This toggles automatic cloaking when the site first loads which hides the site from entering your history.</p>
+							<p><b>Note: Only one automatic cloaking toggle is allowed at a time.</b></p>
+							<hr />
+							<p style="margin-bottom: 5px;">Auto-Launch About:Blank</p>
+							<label class="switch"><input type="checkbox" /><span class="slider round"></span></label>
+							<p style="margin-bottom: 5px;">Auto-Launch Blob</p>
+							<label class="switch"><input type="checkbox" checked /><span class="slider round"></span></label>
+						</div>
+
+						<div class="settingsection">
+							<h1>Tab Cloaking</h1>
+							<p>Tab Cloaking cloaks the name of the tab & icon, so your tab stays hidden from sight. Select a cloak down below to activate it.</p>
+							<div class="dropdown">
+								<button class="dropdown-button">
+									<span>None (Default)</span>
+									<span class="material-symbols-outlined">chevron_right</span>
+								</button>
+							</div>
+						</div>
+						
+						<div class="settingsection">
+							<h1>Panic Key</h1>
+							<p>Press the selected keybind to go to another site quickly. You can set multiple keybinds by seperating them with a comma.</p>
+							<div class="pgroup">
+								<span class="material-symbols-outlined picon">keyboard</span>
+								<input placeholder="Set a keybind. Backtick by default" value="backtick" />
+							</div>
+							<button class="buttonreg" style="max-width: 200px;">Save</button>
+						</div>
+					` : ''}
+
+					${this.activeTab === 'performance' ? html`
+						<h1 class="tab-title">Performance</h1>
+						<div class="settingsection">
+							<h1>Background Particles</h1>
+							<p>This enables the background star particle effects, this is on by default. <b>Performance Impact:</b> High on low-end devices</p>
+							<label class="switch" style="margin-top: 10px;"><input type="checkbox" checked /><span class="slider round"></span></label>
+						</div>
+					` : ''}
+
+					${this.activeTab === 'themes' ? html`
+						<h1 class="tab-title">Themes</h1>
+						<div class="settingsection">
+							<h1>Default Themes</h1>
+							<p>Here's some themes for you to choose from. You can also join our Discord for theme submissions, under suggestions.</p>
+							<div class="dropdown">
+								<button class="dropdown-button">
+									<span>Default</span>
+									<span class="material-symbols-outlined">chevron_right</span>
+								</button>
+							</div>
+						</div>
+					` : ''}
+
+					${this.activeTab === 'proxy' ? html`
+						<h1 class="tab-title">Proxy & Browser</h1>
+						<div class="settingsection">
+							<h1>Proxy</h1>
+							<p>Proxies are what run the unblocking backend for you to enjoy the games and apps that we display.</p>
+							<p>Changing the proxy may make some games perform better, run sites faster, and may make your overall experience better. For more information, join our Discord.</p>
+							<div class="dropdown">
+								<button class="dropdown-button"><span>Scramjet</span><span class="material-symbols-outlined">chevron_right</span></button>
+							</div>
+						</div>
+
+						<div class="settingsection">
+							<h1>Transport</h1>
+							<p>Transport is the method of how the proxy will transport information</p>
+							<p>Changing the transport may make some proxies perform better, but may also cause issues for others. Transport switching is an advanced feature, not recommended if you dont know what your doing.</p>
+							<div class="dropdown">
+								<button class="dropdown-button"><span>Libcurl</span><span class="material-symbols-outlined">chevron_right</span></button>
+							</div>
+							
+							<div style="display: flex; gap: 10px; margin-top: 15px;">
+								<button class="buttonreg" on:click=${() => { connection.setTransport("/baremod/index.mjs", [store.bareurl]); store.transport = "/baremod/index.mjs"; this.mount(); }}>bare server 3</button>
+								<button class="buttonreg" on:click=${() => { connection.setTransport("/libcurl/index.mjs", [{ wisp: store.wispurl }]); store.transport = "/libcurl/index.mjs"; this.mount(); }}>libcurl.js</button>
+								<button class="buttonreg" on:click=${() => { connection.setTransport("/epoxy/index.mjs", [{ wisp: store.wispurl }]); store.transport = "/epoxy/index.mjs"; this.mount(); }}>epoxy</button>
+							</div>
+							<p style="margin-top: 15px;"><b>Active configuration:</b> ${use(store.transport)}</p>
+						</div>
+
+						<div class="settingsection">
+							<h1>Wisp Server</h1>
+							<p>Enter an Alternative Wisp Server to connect to. This url must start with a ws(s):// and end with a /</p>
+							<div class="pgroup">
+								<span class="material-symbols-outlined picon">dns</span>
+								<input bind:value=${use(store.wispurl)} on:input=${(e) => store.wispurl = e.target.value} spellcheck="false" />
+							</div>
+							
+							<p>Enter an Alternative Bare Server to connect to.</p>
+							<div class="pgroup">
+								<span class="material-symbols-outlined picon">dns</span>
+								<input bind:value=${use(store.bareurl)} on:input=${(e) => store.bareurl = e.target.value} spellcheck="false" />
+							</div>
+							
+							<div style="display: flex; gap: 10px; width: 100%; margin-top: 10px;">
+							    <button class="buttonreg">Save</button>
+							    <button class="buttonreg">Reset</button>
+							</div>
+						</div>
+
+						<div class="settingsection">
+							<h1>Browser</h1>
+							<p>This allows you to change settings about the browser and the elements within it. You can change the search engine or add/remove the utility bar.</p>
+							<hr />
+							<p>Search Engine</p>
+							<div class="dropdown">
+								<button class="dropdown-button"><span>DuckDuckGo (default)</span><span class="material-symbols-outlined">chevron_right</span></button>
+							</div>
+							<p style="margin-top: 15px;">Enable Utility Bar</p>
+							<p>This enables the basic top bar that you see when using the proxy. (Recommended)</p>
+							<label class="switch"><input type="checkbox" checked /><span class="slider round"></span></label>
+						</div>
+					` : ''}
+
+					${this.activeTab === 'account' ? html`
+						<h1 class="tab-title">Account Settings</h1>
+						<div class="settingsection">
+							<h1>Password Protection</h1>
+							<p>Protect your account with a password that way only you can view the site.</p>
+							<label class="switch"><input type="checkbox" /><span class="slider round"></span></label>
+							<p>Please remember that when setting your password, set it to something only you can remember, that way you do not get locked out of your account.</p>
+							<div class="pgroup">
+								<span class="material-symbols-outlined picon">lock</span>
+								<input type="password" placeholder="Set Password" />
+							</div>
+							<button class="buttonreg" style="max-width: 300px;">Save</button>
+						</div>
+						
+						<div class="settingsection">
+							<h1>Password Keybind</h1>
+							<p>Set the keybind to toggle the password appearing on screen. By default you will need to hold shift an then press <code style="background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px;">~</code> (left of the 1 key).</p>
+							<div class="pgroup">
+							    <span class="material-symbols-outlined picon">keyboard</span>
+							    <input placeholder="Set a keybind. Tilda by default" value="~" />
+							</div>
+							<button class="buttonreg" style="max-width: 300px;">Save</button>
+						</div>
+						
+						<div class="settingsection">
+							<h1>Import & Export Data</h1>
+							<p>Import simply loads your current userData and boots most of your user settings and data from the last site.</p>
+							<div style="display: flex; gap: 10px; width: 100%;">
+								<button class="splitbutton"><span class="material-symbols-outlined" style="font-size: 16px; margin-right: 5px; vertical-align: middle;">upload</span>Export Data</button>
+								<button class="splitbutton"><span class="material-symbols-outlined" style="font-size: 16px; margin-right: 5px; vertical-align: middle;">download</span>Import Data</button>
+							</div>
+						</div>
+
+						<div class="settingsection">
+							<h1>Wipe all Data</h1>
+							<p>Pressing this button will completely wipe all data, making it as if you never used this site. It is recommended that you export your data before doing this.</p>
+							<button class="buttonreg" style="background: rgba(255, 0, 0, 0.2); border-color: rgba(255, 0, 0, 0.5); width: 100%;">Wipe all Data</button>
+						</div>
+					` : ''}
+
+					${this.activeTab === 'about' ? html`
+						<h1 class="tab-title">About & Statistics</h1>
+						<div class="settingsection">
+							<h1>Development Team</h1>
+							<p>Space is completely open-source and is owned, maintained, and managed by the Twilight Development Group (TDG) at Night Network.</p>
+						</div>
+						<div class="settingsection">
+							<h1>Version & Analytics</h1>
+							<p style="margin-bottom: 5px;">You are currently on: <span style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">v1.1.0</span></p>
+							<p style="margin-bottom: 5px;">Server Status: <span style="background: rgba(0, 255, 0, 0.2); color: lightgreen; padding: 2px 6px; border-radius: 4px;">Running</span></p>
+							<p>Load Times: <span style="background: rgba(255, 255, 0, 0.2); color: yellow; padding: 2px 6px; border-radius: 4px;">Medium</span></p>
+						</div>
+					` : ''}
+
+					${this.activeTab === 'news' ? html`
+						<h1 class="tab-title">News & Updates</h1>
+						<div class="settingsection">
+							<h1>Space has Updated! <span style="font-size: 12px; opacity: 0.7;">(Version release v1.1.0)</span></h1>
+							<p>Added more fixes! Join our Discord to get more updates and changes.</p>
+							<ul style="color: #aaa; font-size: 14px; padding-left: 20px;">
+								<li style="margin-bottom: 5px;">Themes</li>
+								<li style="margin-bottom: 5px;">Dropped support for Bare</li>
+								<li>Fixed Cloaking</li>
+							</ul>
+						</div>
+						
+						<div class="settingsection">
+							<h1>Space has released! <span style="font-size: 12px; opacity: 0.7;">(Version release v1.0.0)</span></h1>
+							<p>Enjoy using all of the fun and exciting features we have packed into this site!</p>
+							<ul style="color: #aaa; font-size: 14px; padding-left: 20px;">
+								<li style="margin-bottom: 5px;">Out of this world UI</li>
+								<li style="margin-bottom: 5px;">Games</li>
+								<li style="margin-bottom: 5px;">Apps</li>
+								<li style="margin-bottom: 5px;">Proxy</li>
+								<li>Cloaking</li>
+							</ul>
+						</div>
+					` : ''}
+
+					${this.activeTab === 'faq' ? html`
+						<h1 class="tab-title">Frequently asked questions</h1>
+						<div class="settingsection">
+							<h1>Where can I find links?</h1>
+							<p>You can find links by joining our Discord. We have a community links channel, a link bot for dispensing links, and weekly links.</p>
+						</div>
+						<div class="settingsection">
+							<h1>Why do some sites not load/work?</h1>
+							<p>There can be a number of reason a site doesnt load but some of the common ones are listed below.</p>
+							<ul style="color: #aaa; font-size: 14px; padding-left: 20px;">
+								<li style="margin-bottom: 5px;">Proxy Server doesn't support the site(s)</li>
+								<li style="margin-bottom: 5px;">Our servers are either down or experiencing high loads</li>
+								<li style="margin-bottom: 5px;">Issue with the actual site you are visiting</li>
+								<li>Security flaggers!</li>
+							</ul>
+						</div>
+					` : ''}
+				</div>
+			</div>
+			
+			<div style="display: block; position: absolute; bottom: 10px; width: 100%; text-align: center; color: #888; z-index: 100;">
+				<p class="banner" style="margin: 0; background: rgba(0,0,0,0.5); padding: 5px 15px; display: inline-block; border-radius: 20px; font-size: 14px;">Hosted by <span style="color: rgba(200, 50, 255, 1); text-decoration: none;">Billiger</span> <i style="margin-left: 10px; cursor: pointer;" class="fa-solid fa-xmark"></i></p>
+			</div>
+		</div>
+	`;
+}
+
+
 function AppContainer() {
-	this.showProxy = false;
+	this.currentView = 'home';
 	this.css = `
 		width: 100%;
 		height: 100%;
@@ -739,7 +2072,13 @@ function AppContainer() {
 
 	return html`
 		<div>
-			${use(this.showProxy, show => show ? h(BrowserApp, { onCloseProxy: () => this.showProxy = false }) : h(HomeScreen, { onOpenProxy: () => this.showProxy = true }))}
+			${use(this.currentView, view => {
+				if (view === 'proxy') return h(BrowserApp, { onCloseProxy: () => this.currentView = 'home', onSettings: () => this.currentView = 'settings' });
+				if (view === 'games') return h(GamesScreen, { onOpenProxy: () => this.currentView = 'proxy', onHome: () => this.currentView = 'home', onApps: () => this.currentView = 'apps', onSettings: () => this.currentView = 'settings' });
+				if (view === 'apps') return h(AppsScreen, { onOpenProxy: () => this.currentView = 'proxy', onHome: () => this.currentView = 'home', onGames: () => this.currentView = 'games', onSettings: () => this.currentView = 'settings' });
+				if (view === 'settings') return h(SettingsScreen, { onOpenProxy: () => this.currentView = 'proxy', onHome: () => this.currentView = 'home', onGames: () => this.currentView = 'games', onApps: () => this.currentView = 'apps' });
+				return h(HomeScreen, { onOpenProxy: () => this.currentView = 'proxy', onGames: () => this.currentView = 'games', onApps: () => this.currentView = 'apps', onSettings: () => this.currentView = 'settings' });
+			})}
 		</div>
 	`;
 }

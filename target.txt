@@ -1,0 +1,281 @@
+function BrowserApp() {
+	this.css = `
+		--bg: #000000;
+		--bg-2: #0a0a0a;
+		--bg-3: #121212;
+		--bg-4: #1a1a1a;
+		--bg-5: rgba(0, 0, 0, 0.8);
+		--browser-controls-height: 98px;
+		--browser-bookmarks-height: 38px;
+		--browser-toolbar-height: 40px;
+		--browser-button-size: 40px;
+		--browser-tab-height: 40px;
+
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		box-sizing: border-box;
+		position: relative;
+		background: var(--bg);
+
+		iframe {
+			height: calc(100vh - var(--browser-controls-height) - var(--browser-bookmarks-height) - 15px);
+			width: calc(100vw - 10px);
+			background: #fff;
+			position: absolute;
+			left: calc(50% - 1px);
+			transform: translateX(-50%);
+			bottom: 7.5px;
+			border: none;
+			border-radius: 20px;
+			z-index: 2;
+		}
+
+		.controls {
+			height: calc(var(--browser-controls-height) + var(--browser-bookmarks-height));
+			background: var(--bg);
+			width: 100vw;
+			position: fixed;
+			left: 0;
+			top: 0;
+			padding: 5px;
+			box-sizing: border-box;
+			transition: height 0.2s ease;
+			z-index: 3;
+		}
+
+		.tabs {
+			position: absolute;
+			left: 0;
+			top: 2.5px;
+			padding: 4px 10px;
+			width: 100%;
+			height: 44px;
+			display: flex;
+			gap: 5px;
+		}
+
+		.tab {
+			background: var(--bg-3);
+			width: 200px;
+			height: var(--browser-tab-height);
+			border-radius: 16px;
+			padding: 6px 10px;
+			box-sizing: border-box;
+			position: relative;
+			color: white;
+			display: flex;
+			align-items: center;
+			overflow: hidden;
+			white-space: nowrap;
+			cursor: default;
+			transition: 0.2s;
+		}
+
+		.closetab {
+			position: absolute;
+			right: 12px;
+			cursor: pointer;
+			font-size: 13px;
+		}
+
+		.tab span {
+			font-weight: 500;
+			width: max-content;
+			text-wrap: unset;
+			overflow: hidden;
+			width: 100%;
+			mask-image: linear-gradient(to right, black 60%, transparent 85%);
+			-webkit-mask-image: linear-gradient(to right, black 60%, transparent 85%);
+		}
+
+		.toolbar {
+			position: absolute;
+			top: 52px;
+			left: -5px;
+			justify-items: center;
+			justify-content: center;
+			box-sizing: border-box;
+			height: var(--browser-toolbar-height);
+			display: flex;
+			width: 100%;
+			gap: 8px;
+			padding: 0 6px;
+		}
+
+		#bar {
+			flex: 0.97;
+			box-sizing: border-box;
+			border-radius: 16px;
+			border: none;
+			background: var(--bg-2);
+			padding: 8px 16px;
+			outline: none;
+			color: white;
+			font-size: 15px;
+			transition: 0.2s;
+			height: var(--browser-toolbar-height);
+		}
+
+		#bar:focus {
+			background: var(--bg-3);
+		}
+
+		.toolbar button {
+			width: var(--browser-button-size);
+			height: var(--browser-button-size);
+			border-radius: 16px;
+			border: none;
+			background: var(--bg-2);
+			color: white;
+			transition: 0.2s;
+			cursor: pointer;
+			font-size: 15px;
+			flex-shrink: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.toolbar button:hover {
+			background: var(--bg-3);
+		}
+
+		#newtab {
+			width: var(--browser-button-size);
+			height: var(--browser-button-size);
+			border-radius: 16px;
+			border: none;
+			background: var(--bg-2);
+			color: white;
+			transition: 0.2s;
+			cursor: pointer;
+			font-size: 15px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		#newtab:hover {
+			background: var(--bg-3);
+		}
+
+		.bookmarks {
+			box-sizing: border-box;
+			display: flex;
+			flex-direction: row;
+			flex-wrap: nowrap;
+			width: 100%;
+			height: var(--browser-bookmarks-height);
+			padding: 0 6px;
+			position: absolute;
+			top: 94px;
+			gap: 5px;
+			overflow: hidden;
+			opacity: 1;
+		}
+
+		.bookmark {
+			border-radius: 100px;
+			width: auto;
+			height: 100%;
+			padding: 2px 11px;
+			height: 38px;
+			box-sizing: border-box;
+			font-size: 13px;
+			background: var(--bg-2);
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			cursor: pointer;
+			transition: 0.2s;
+			justify-content: center;
+		}
+
+		.bookmark:hover {
+			background: var(--bg-3);
+		}
+
+		.bookmark span {
+			color: white;
+			font-weight: 500;
+		}
+	`;
+	this.url = store.url;
+
+	const frame = scramjet.createFrame();
+
+	this.mount = () => {
+		let body = btoa(
+			`<body style="background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">Welcome to <i>Scramjet</i>! Type in a URL in the omnibox above and press enter to get started.</body>`
+		);
+		frame.go(`data:text/html;base64,${body}`);
+	};
+
+	frame.addEventListener("urlchange", (e) => {
+		if (!e.url) return;
+		this.url = e.url;
+	});
+
+	const handleSubmit = () => {
+		this.url = this.url.trim();
+		if (!this.url.startsWith("http")) {
+			this.url = "https://" + this.url;
+		}
+
+		return frame.go(this.url);
+	};
+
+	return html`
+		<div>
+			<div class="controls">
+				<div class="tabs">
+					<div class="tab active">
+						<span>${use(this.url)}</span>
+						<i class="fas fa-times closetab" on:click=${this.onCloseProxy}></i>
+					</div>
+					<button id="newtab" on:click=${this.onCloseProxy}>
+						<i class="fas fa-plus"></i>
+					</button>
+				</div>
+				<div class="toolbar">
+					<button on:click=${() => frame.back()}>
+						<i class="fas fa-arrow-left"></i>
+					</button>
+					<button on:click=${() => frame.forward()}>
+						<i class="fas fa-arrow-right"></i>
+					</button>
+					<button on:click=${() => frame.reload()}>
+						<i class="fas fa-rotate-right"></i>
+					</button>
+					<input
+						type="text"
+						placeholder="Search for something or enter a URL here..."
+						id="bar"
+						bind:value=${use(this.url)} 
+						on:input=${(e) => { this.url = e.target.value; }} 
+						on:keyup=${(e) => e.keyCode == 13 && (store.url = this.url) && handleSubmit()}
+					/>
+					<button on:click=${() => window.open(scramjet.encodeUrl(this.url))}>
+						<i class="fas fa-external-link-alt"></i>
+					</button>
+					<button on:click=${() => document.documentElement.requestFullscreen()}>
+						<i class="fas fa-expand"></i>
+					</button>
+					<button on:click=${() => cfg.showModal()}>
+						<i class="fas fa-cog"></i>
+					</button>
+				</div>
+				<div class="bookmarks">
+					<div class="bookmark">
+						<i class="fas fa-plus" style="color: white"></i>
+						<span>New Bookmark</span>
+					</div>
+				</div>
+			</div>
+			${frame.frame}
+		</div>
+	`;
+}
+
