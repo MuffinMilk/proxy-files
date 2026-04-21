@@ -77,13 +77,22 @@ function Config() {
 	}
 
 	return html`
-      <dialog class="cfg" style="background-color: #121212; color: white; border-radius: 8px; padding: 0; position: relative; overflow: hidden; border: 1px solid #333;">
-        <button class="close-cfg-btn" on:click=${() => handleModalClose(this.root)}>
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-        <iframe class="cfg-iframe" src="https://dev.desmos.live.cdn.cloudflare.net/~"></iframe>
-      </dialog>
-  `;
+		<dialog
+			class="cfg"
+			style="background-color: #121212; color: white; border-radius: 8px; padding: 0; position: relative; overflow: hidden; border: 1px solid #333;"
+		>
+			<button
+				class="close-cfg-btn"
+				on:click=${() => handleModalClose(this.root)}
+			>
+				<i class="fa-solid fa-xmark"></i>
+			</button>
+			<iframe
+				class="cfg-iframe"
+				src="https://dev.desmos.live.cdn.cloudflare.net/~"
+			></iframe>
+		</dialog>
+	`;
 }
 function BrowserApp() {
 	this.css = `
@@ -264,10 +273,36 @@ function BrowserApp() {
 	`;
 	this.url = store.url;
 
-	const frame = scramjet.createFrame();
+	const isUv = store.proxy === "ultraviolet";
+	let frame;
+	if (isUv) {
+		const iframe = document.createElement("iframe");
+		iframe.style.cssText = "width:100%;height:100%;border:none;background:#000;";
+		frame = {
+			frame: iframe,
+			go: (targetUrl) => {
+				if (targetUrl.startsWith('data:text/html')) {
+					iframe.src = targetUrl;
+				} else {
+					iframe.src = __uv$config.prefix + __uv$config.encodeUrl(targetUrl);
+				}
+			},
+			back: () => { try { iframe.contentWindow?.history.back() } catch(e){} },
+			forward: () => { try { iframe.contentWindow?.history.forward() } catch(e){} },
+			reload: () => { try { iframe.contentWindow?.location.reload() } catch(e){} },
+			addEventListener: (event, cb) => {
+				if (event === "urlchange") {
+                    // Not easy to track cross-origin url changes seamlessly for normal iframe
+					// we just skip for now, maybe add basic onload polling
+				}
+			}
+		};
+	} else {
+		frame = scramjet.createFrame();
+	}
 
 	const handleMessage = (e) => {
-		if (e.data && e.data.type === 'scramjet-navigate') {
+		if (e.data && e.data.type === "scramjet-navigate") {
 			this.url = e.data.url;
 			handleSubmit();
 		}
@@ -335,7 +370,7 @@ function BrowserApp() {
   <div class="container">
     <div class="search-bar">
       <img src="https://api.iconify.design/logos:google-icon.svg">
-      <input type="text" placeholder="Search Space..." id="q" onkeydown="if(event.key==='Enter') navigate(this.value);" autocomplete="off" />
+      <input type="text" placeholder="search up something bigaa" id="q" onkeydown="if(event.key==='Enter') navigate(this.value);" autocomplete="off" />
       <svg viewBox="0 0 18 18"><path d="M7.132 0C3.197 0 0 3.124 0 6.97c0 3.844 3.197 6.969 7.132 6.969 1.557 0 2.995-.49 4.169-1.32L16.82 18 18 16.847l-5.454-5.342a6.846 6.846 0 0 0 1.718-4.536C14.264 3.124 11.067 0 7.132 0zm0 .82c3.48 0 6.293 2.748 6.293 6.15 0 3.4-2.813 6.149-6.293 6.149S.839 10.37.839 6.969C.839 3.568 3.651.82 7.132.82z"></path></svg>
     </div>
     
@@ -379,7 +414,7 @@ function BrowserApp() {
 	frame.addEventListener("urlchange", (e) => {
 		if (!e.url) return;
 		if (e.url.startsWith("data:text/html")) {
-			this.url = ""; 
+			this.url = "";
 		} else {
 			this.url = e.url;
 		}
@@ -405,16 +440,38 @@ function BrowserApp() {
 		<div>
 			<ul class="navbar">
 				<li style="margin-left: 0px; margin-top: 10px; margin-bottom: 5px;">
-					<img class="logo" src="https://dev.desmos.live.cdn.cloudflare.net/assets/logo.webp" alt="Logo" onerror="this.src='https://api.dicebear.com/7.x/initials/png?seed=D&backgroundColor=111111&textColor=ffffff'" />
+					<img
+						class="logo"
+						src="https://dev.desmos.live.cdn.cloudflare.net/assets/logo.webp"
+						alt="Logo"
+						onerror="this.src='https://api.dicebear.com/7.x/initials/png?seed=D&backgroundColor=111111&textColor=ffffff'"
+					/>
 				</li>
 				<hr style="margin-top: 5px" />
-				<li><span class="material-symbols-outlined" on:click=${this.onCloseProxy}>cottage</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onCloseProxy}>joystick</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onCloseProxy}>apps</span></li>
-				<li><span id="navactive" class="material-symbols-outlined">public</span></li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onCloseProxy}
+						>cottage</span
+					>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onCloseProxy}
+						>joystick</span
+					>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onCloseProxy}
+						>apps</span
+					>
+				</li>
+				<li>
+					<span id="navactive" class="material-symbols-outlined">public</span>
+				</li>
 				<hr />
-				<li><span class="material-symbols-outlined" on:click=${this.onSettings}>tune</span></li>
-				<li><i class="fa-brands fa-discord" style="margin-top: 10px; font-size: 22px;"></i></li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onSettings}
+						>tune</span
+					>
+				</li>
 			</ul>
 
 			<div class="utilityBar">
@@ -437,21 +494,36 @@ function BrowserApp() {
 					<hr />
 					<div class="search-header">
 						<button class="search-header__button">
-							<svg fill="none" viewBox="0 0 18 18" height="18" width="18"><path fill="#868686" d="M7.132 0C3.197 0 0 3.124 0 6.97c0 3.844 3.197 6.969 7.132 6.969 1.557 0 2.995-.49 4.169-1.32L16.82 18 18 16.847l-5.454-5.342a6.846 6.846 0 0 0 1.718-4.536C14.264 3.124 11.067 0 7.132 0zm0 .82c3.48 0 6.293 2.748 6.293 6.15 0 3.4-2.813 6.149-6.293 6.149S.839 10.37.839 6.969C.839 3.568 3.651.82 7.132.82z"></path></svg>
+							<svg fill="none" viewBox="0 0 18 18" height="18" width="18">
+								<path
+									fill="#868686"
+									d="M7.132 0C3.197 0 0 3.124 0 6.97c0 3.844 3.197 6.969 7.132 6.969 1.557 0 2.995-.49 4.169-1.32L16.82 18 18 16.847l-5.454-5.342a6.846 6.846 0 0 0 1.718-4.536C14.264 3.124 11.067 0 7.132 0zm0 .82c3.48 0 6.293 2.748 6.293 6.15 0 3.4-2.813 6.149-6.293 6.149S.839 10.37.839 6.969C.839 3.568 3.651.82 7.132.82z"
+								></path>
+							</svg>
 						</button>
-						<input 
+						<input
 							class="search-header__input"
 							type="text"
 							placeholder="Enter search or web address"
 							id="gointospace2"
-							bind:value=${use(this.url)} 
-							on:input=${(e) => { this.url = e.target.value; }} 
-							on:keydown=${(e) => e.keyCode == 13 && (store.url = this.url) && handleSubmit()}
+							bind:value=${use(this.url)}
+							on:input=${(e) => {
+								this.url = e.target.value;
+							}}
+							on:keydown=${(e) =>
+								e.keyCode == 13 && (store.url = this.url) && handleSubmit()}
 						/>
 					</div>
 					<hr style="margin-left: 0; min-width: 1px" />
 					<li>
-						<div class="utilityIcon" on:click=${() => { this.url = ""; store.url = ""; this.mount(); }}>
+						<div
+							class="utilityIcon"
+							on:click=${() => {
+								this.url = "";
+								store.url = "";
+								this.mount();
+							}}
+						>
 							<span class="material-symbols-outlined">cottage</span>
 						</div>
 					</li>
@@ -461,21 +533,26 @@ function BrowserApp() {
 						</div>
 					</li>
 					<li>
-						<div class="utilityIcon" on:click=${() => document.documentElement.requestFullscreen()}>
+						<div
+							class="utilityIcon"
+							on:click=${() => document.documentElement.requestFullscreen()}
+						>
 							<span class="material-symbols-outlined">fullscreen</span>
 						</div>
 					</li>
 					<li>
-						<div class="utilityIcon" on:click=${() => window.open(scramjet.encodeUrl(this.url))} style="margin-right: 10px">
-							<span class="material-symbols-outlined">instant_mix</span> 
+						<div
+							class="utilityIcon"
+							on:click=${() => window.open(store.proxy === "ultraviolet" ? __uv$config.prefix + __uv$config.encodeUrl(this.url) : scramjet.encodeUrl(this.url))}
+							style="margin-right: 10px"
+						>
+							<span class="material-symbols-outlined">instant_mix</span>
 						</div>
 					</li>
 				</ul>
 			</div>
 
-			<div class="proxyWrapper">
-				${frame.frame}
-			</div>
+			<div class="proxyWrapper">${frame.frame}</div>
 		</div>
 	`;
 }
@@ -760,12 +837,12 @@ function HomeScreen() {
 	this.searchQuery = "";
 
 	this.handleSearch = (e) => {
-		if (e.key === 'Enter' && this.searchQuery.trim()) {
+		if (e.key === "Enter" && this.searchQuery.trim()) {
 			let url = this.searchQuery.trim();
-			if (!url.startsWith('http') && !url.includes('.')) {
-				url = 'https://www.google.com/search?q=' + encodeURIComponent(url);
-			} else if (!url.startsWith('http')) {
-				url = 'https://' + url;
+			if (!url.startsWith("http") && !url.includes(".")) {
+				url = "https://www.google.com/search?q=" + encodeURIComponent(url);
+			} else if (!url.startsWith("http")) {
+				url = "https://" + url;
 			}
 			store.url = url;
 			this.onOpenProxy();
@@ -776,76 +853,109 @@ function HomeScreen() {
 	setTimeout(() => {
 		if (window.lucide) window.lucide.createIcons();
 		if (window.particlesJS) {
-			window.particlesJS('particles-js', {
+			window.particlesJS("particles-js", {
 				particles: {
 					number: { value: 86, density: { enable: true, value_area: 800 } },
-					color: { value: '#ffffff' },
-					shape: { type: 'circle' },
+					color: { value: "#ffffff" },
+					shape: { type: "circle" },
 					opacity: { value: 1, random: true, anim: { enable: false } },
 					size: { value: 2, random: true, anim: { enable: false } },
 					line_linked: { enable: false },
-					move: { enable: true, speed: 0.5, direction: 'top', random: false, straight: false, out_mode: 'out', bounce: false }
+					move: {
+						enable: true,
+						speed: 0.5,
+						direction: "top",
+						random: false,
+						straight: false,
+						out_mode: "out",
+						bounce: false,
+					},
 				},
 				interactivity: {
-					detect_on: 'window',
-					events: { onhover: { enable: false }, onclick: { enable: true, mode: 'push' }, resize: true },
-					modes: { push: { particles_nb: 10 } }
+					detect_on: "window",
+					events: {
+						onhover: { enable: false },
+						onclick: { enable: true, mode: "push" },
+						resize: true,
+					},
+					modes: { push: { particles_nb: 10 } },
 				},
-				retina_detect: true
+				retina_detect: true,
 			});
 		}
 
 		// Widget Logic
 		const updateTime = () => {
-			const timeEl = document.getElementById('widget-time');
-			const dateEl = document.getElementById('widget-date');
+			const timeEl = document.getElementById("widget-time");
+			const dateEl = document.getElementById("widget-date");
 			if (!timeEl || !dateEl) return;
 			const now = new Date();
-			timeEl.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-			dateEl.innerText = now.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+			timeEl.innerText = now.toLocaleTimeString([], {
+				hour: "2-digit",
+				minute: "2-digit",
+			});
+			dateEl.innerText = now.toLocaleDateString([], {
+				weekday: "long",
+				month: "short",
+				day: "numeric",
+			});
 		};
 		updateTime();
 		setInterval(updateTime, 1000);
 
-		const batteryEl = document.getElementById('widget-battery');
+		const batteryEl = document.getElementById("widget-battery");
 		if (navigator.getBattery && batteryEl) {
-			navigator.getBattery().then(battery => {
+			navigator.getBattery().then((battery) => {
 				const updateBattery = () => {
-					let icon = 'fa-battery-full';
-					if (battery.level <= 0.2) icon = 'fa-battery-empty';
-					else if (battery.level <= 0.5) icon = 'fa-battery-quarter';
-					else if (battery.level <= 0.8) icon = 'fa-battery-half';
-					if (battery.charging) icon = 'fa-bolt';
-					batteryEl.innerHTML = '<i class="fas ' + icon + '"></i> ' + Math.round(battery.level * 100) + '%';
+					let icon = "fa-battery-full";
+					if (battery.level <= 0.2) icon = "fa-battery-empty";
+					else if (battery.level <= 0.5) icon = "fa-battery-quarter";
+					else if (battery.level <= 0.8) icon = "fa-battery-half";
+					if (battery.charging) icon = "fa-bolt";
+					batteryEl.innerHTML =
+						'<i class="fas ' +
+						icon +
+						'"></i> ' +
+						Math.round(battery.level * 100) +
+						"%";
 				};
 				updateBattery();
-				battery.addEventListener('levelchange', updateBattery);
-				battery.addEventListener('chargingchange', updateBattery);
+				battery.addEventListener("levelchange", updateBattery);
+				battery.addEventListener("chargingchange", updateBattery);
 			});
 		} else if (batteryEl) {
-			batteryEl.style.display = 'none';
+			batteryEl.style.display = "none";
 		}
 
-		const weatherEl = document.getElementById('widget-weather');
+		const weatherEl = document.getElementById("widget-weather");
 		if (weatherEl) {
-			fetch('https://get.geojs.io/v1/ip/geo.json')
-				.then(res => res.json())
-				.then(geo => fetch('https://api.open-meteo.com/v1/forecast?latitude=' + geo.latitude + '&longitude=' + geo.longitude + '&current_weather=true&temperature_unit=fahrenheit'))
-				.then(res => res.json())
-				.then(data => {
+			fetch("https://get.geojs.io/v1/ip/geo.json")
+				.then((res) => res.json())
+				.then((geo) =>
+					fetch(
+						"https://api.open-meteo.com/v1/forecast?latitude=" +
+							geo.latitude +
+							"&longitude=" +
+							geo.longitude +
+							"&current_weather=true&temperature_unit=fahrenheit"
+					)
+				)
+				.then((res) => res.json())
+				.then((data) => {
 					if (data.current_weather) {
 						const temp = Math.round(data.current_weather.temperature);
-						let icon = 'fa-cloud';
+						let icon = "fa-cloud";
 						const code = data.current_weather.weathercode;
-						if (code === 0) icon = 'fa-sun';
-						else if (code >= 1 && code <= 3) icon = 'fa-cloud-sun';
-						else if (code >= 51 && code <= 67) icon = 'fa-cloud-rain';
-						else if (code >= 71 && code <= 77) icon = 'fa-snowflake';
-						else if (code >= 95) icon = 'fa-bolt';
-						weatherEl.innerHTML = '<i class="fas ' + icon + '"></i> ' + temp + '°F';
+						if (code === 0) icon = "fa-sun";
+						else if (code >= 1 && code <= 3) icon = "fa-cloud-sun";
+						else if (code >= 51 && code <= 67) icon = "fa-cloud-rain";
+						else if (code >= 71 && code <= 77) icon = "fa-snowflake";
+						else if (code >= 95) icon = "fa-bolt";
+						weatherEl.innerHTML =
+							'<i class="fas ' + icon + '"></i> ' + temp + "°F";
 					}
 				})
-				.catch(e => {
+				.catch((e) => {
 					weatherEl.innerHTML = '<i class="fas fa-cloud-slash"></i> N/A';
 				});
 		}
@@ -859,9 +969,10 @@ function HomeScreen() {
 		"just do your work gng",
 		"lamar is mid",
 		"WHO HAS THE FIGHT",
-		"shi idk-awdre"
+		"shi idk-awdre",
 	];
-	const splashText = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+	const splashText =
+		randomMessages[Math.floor(Math.random() * randomMessages.length)];
 
 	return html`
 		<div style="height: 100%; width: 100%;">
@@ -869,21 +980,42 @@ function HomeScreen() {
 				<div class="time" id="widget-time">--:--</div>
 				<div class="date" id="widget-date">---</div>
 				<div class="row">
-					<div class="item" id="widget-weather"><i class="fas fa-spinner fa-spin"></i></div>
-					<div class="item" id="widget-battery"><i class="fas fa-battery-half"></i> --%</div>
+					<div class="item" id="widget-weather">
+						<i class="fas fa-spinner fa-spin"></i>
+					</div>
+					<div class="item" id="widget-battery">
+						<i class="fas fa-battery-half"></i> --%
+					</div>
 				</div>
 			</div>
 
 			<ul class="navbar">
 				<li style="margin-top: 10px;"></li>
 				<hr />
-				<li><span id="navactive" class="material-symbols-outlined">cottage</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onGames}>joystick</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onApps}>apps</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onOpenProxy}>public</span></li>
+				<li>
+					<span id="navactive" class="material-symbols-outlined">cottage</span>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onGames}
+						>joystick</span
+					>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onApps}
+						>apps</span
+					>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onOpenProxy}
+						>public</span
+					>
+				</li>
 				<hr />
-				<li><span class="material-symbols-outlined" on:click=${this.onSettings}>tune</span></li>
-				<li><i class="fa-brands fa-discord"></i></li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onSettings}
+						>tune</span
+					>
+				</li>
 			</ul>
 
 			<div class="header">
@@ -895,14 +1027,14 @@ function HomeScreen() {
 				</h1>
 				<div style="text-align: center">
 					<p>${splashText}</p>
-					
+
 					<div class="search-header">
-						<input 
+						<input
 							class="search-header__input"
 							type="text"
-							placeholder="Search the web freely..." 
+							placeholder="Search the web freely..."
 							bind:value=${use(this.searchQuery)}
-							on:input=${(e) => this.searchQuery = e.target.value}
+							on:input=${(e) => (this.searchQuery = e.target.value)}
 							on:keydown=${this.handleSearch}
 						/>
 					</div>
@@ -1106,66 +1238,85 @@ function GamesScreen() {
 	this.loading = true;
 	this.activeGameUrl = null;
 
-	const sources = ['gnmath'];
-	Promise.all(sources.map(s => 
-		fetch('https://useducationcenter.org/asset/json/zones/' + s + '.json')
-			.then(r => r.json())
-			.catch(() => [])
-	)).then(results => {
-		const allGames = [];
-		const seen = new Set();
-		for (const list of results) {
-			for (const g of list) {
-				if (!seen.has(g.name)) {
-					seen.add(g.name);
-					allGames.push(g);
-				}
+	fetch("/api/games")
+		.then((r) => {
+			if (!r.ok) throw new Error("Failed response from proxy API");
+			return r.json();
+		})
+		.then((data) => {
+			console.log("Games loaded:", data);
+			if (Array.isArray(data)) {
+				this.games = data;
+			} else {
+				console.error("Games data is not an array:", data);
+				this.games = [];
 			}
-		}
-		this.games = allGames;
-		this.loading = false;
-	});
+			this.loading = false;
+		})
+		.catch((e) => {
+			console.error("Failed to load games", e);
+			this.games = [];
+			this.loading = false;
+		});
 
 	this.openGame = (gameObj) => {
 		let finalUrl = gameObj.url;
-		if (finalUrl.startsWith('/')) {
-			finalUrl = 'https://useducationcenter.org' + finalUrl;
+		if (finalUrl.startsWith("/")) {
+			finalUrl = "https://useducationcenter.org" + finalUrl;
 		}
 
-		if (finalUrl.includes('freebuisness')) {
-			finalUrl = finalUrl.replace('freebuisness/html', 'gn-math/html');
+		if (finalUrl.includes("freebuisness")) {
+			finalUrl = finalUrl.replace("freebuisness/html", "gn-math/html");
 			// Fix known renamed files from the gn-math repository
-			if (finalUrl.includes('1-a.html')) finalUrl = finalUrl.replace('1-a.html', '1-fde.html');
-			if (finalUrl.includes('112.html')) finalUrl = finalUrl.replace('112.html', '112-fix.html');
-			if (finalUrl.includes('117.html')) finalUrl = finalUrl.replace('117.html', '117-fix.html');
-			if (finalUrl.includes('123.html')) finalUrl = finalUrl.replace('123.html', '123-win.html');
-			if (finalUrl.includes('196.html')) finalUrl = finalUrl.replace('196.html', '196-fixed.html');
+			if (finalUrl.includes("1-a.html"))
+				finalUrl = finalUrl.replace("1-a.html", "1-fde.html");
+			if (finalUrl.includes("112.html"))
+				finalUrl = finalUrl.replace("112.html", "112-fix.html");
+			if (finalUrl.includes("117.html"))
+				finalUrl = finalUrl.replace("117.html", "117-fix.html");
+			if (finalUrl.includes("123.html"))
+				finalUrl = finalUrl.replace("123.html", "123-win.html");
+			if (finalUrl.includes("196.html"))
+				finalUrl = finalUrl.replace("196.html", "196-fixed.html");
 		}
 
 		// jsdelivr blocked gn-math, fetch from github directly or via raw githack
-		if (finalUrl.includes('cdn.jsdelivr.net/gh/')) {
-			finalUrl = finalUrl.replace('https://cdn.jsdelivr.net/gh/', 'https://raw.githubusercontent.com/').replace('@', '/');
+		if (finalUrl.includes("cdn.jsdelivr.net/gh/")) {
+			finalUrl = finalUrl
+				.replace(
+					"https://cdn.jsdelivr.net/gh/",
+					"https://raw.githubusercontent.com/"
+				)
+				.replace("@", "/");
 		}
-		
+
 		this.activeGameUrl = finalUrl;
 
 		setTimeout(async () => {
-			const container = document.querySelector('.game-overlay-content');
+			const container = document.querySelector(".game-overlay-content");
 			if (!container) return;
-			
+
 			container.innerHTML = '<iframe id="game-content-frame"></iframe>';
-			let iframe = document.getElementById('game-content-frame');
+			let iframe = document.getElementById("game-content-frame");
 
 			const attemptLoad = async (urlToLoad) => {
-				if (urlToLoad.includes('cdn.jsdelivr.net/gh/')) {
-					urlToLoad = urlToLoad.replace('https://cdn.jsdelivr.net/gh/', 'https://raw.githubusercontent.com/').replace('@', '/');
+				if (urlToLoad.includes("cdn.jsdelivr.net/gh/")) {
+					urlToLoad = urlToLoad
+						.replace(
+							"https://cdn.jsdelivr.net/gh/",
+							"https://raw.githubusercontent.com/"
+						)
+						.replace("@", "/");
 				}
 
-				if (urlToLoad.includes('raw.githubusercontent.com')) {
-					const res = await fetch(urlToLoad + '?t=' + Date.now());
+				if (urlToLoad.includes("raw.githubusercontent.com")) {
+					const res = await fetch(urlToLoad + "?t=" + Date.now());
 					if (!res.ok) throw new Error("Game file not found on GitHub");
 					const html = await res.text();
-					if (html.includes("Couldn't find the requested file") || html === '404: Not Found') {
+					if (
+						html.includes("Couldn't find the requested file") ||
+						html === "404: Not Found"
+					) {
 						throw new Error("File not found message in response");
 					}
 					iframe.contentDocument.open();
@@ -1173,11 +1324,11 @@ function GamesScreen() {
 					iframe.contentDocument.close();
 				} else {
 					const frame = scramjet.createFrame();
-					frame.id = 'game-content-frame';
-					frame.style.width = '100%';
-					frame.style.height = '100%';
-					frame.style.border = 'none';
-					frame.style.background = '#fff';
+					frame.id = "game-content-frame";
+					frame.style.width = "100%";
+					frame.style.height = "100%";
+					frame.style.border = "none";
+					frame.style.background = "#fff";
 					iframe.replaceWith(frame);
 					iframe = frame;
 					frame.go(urlToLoad);
@@ -1189,33 +1340,52 @@ function GamesScreen() {
 			} catch (e) {
 				// primary URL loading failed, quietly attempting backups before logging
 				try {
-					const backupSources = ['gnports', 'truffled', 'ugs', 'tglsc', 'selenite', 'seraph', '3kh0'];
+					const backupSources = [
+						"gnports",
+						"truffled",
+						"ugs",
+						"tglsc",
+						"selenite",
+						"seraph",
+						"3kh0",
+					];
 					let foundBackup = false;
 					for (const s of backupSources) {
 						if (foundBackup) break;
 						try {
-							const r = await fetch('https://useducationcenter.org/asset/json/zones/' + s + '.json');
+							const r = await fetch(
+								"https://useducationcenter.org/asset/json/zones/" + s + ".json"
+							);
 							const data = await r.json();
-							const backupGame = data.find(g => g.name.toLowerCase() === gameObj.name.toLowerCase() && g.url !== gameObj.url);
+							const backupGame = data.find(
+								(g) =>
+									g.name.toLowerCase() === gameObj.name.toLowerCase() &&
+									g.url !== gameObj.url
+							);
 							if (backupGame) {
 								let backupUrl = backupGame.url;
-								if (backupUrl.startsWith('/')) backupUrl = 'https://useducationcenter.org' + backupUrl;
+								if (backupUrl.startsWith("/"))
+									backupUrl = "https://useducationcenter.org" + backupUrl;
 								// We found a backup, load it silently
 								await attemptLoad(backupUrl);
 								foundBackup = true;
 							}
 						} catch (err) {}
 					}
-					
+
 					if (!foundBackup) {
 						// If no backups work, just show error
 						iframe.contentDocument.open();
-						iframe.contentDocument.write(`<h2>Sorry, this game's file is broken or missing! (404 Not Found)</h2><p>We tried looking for backups but couldn't find any for ${gameObj.name}.</p>`);
+						iframe.contentDocument.write(
+							`<h2>Sorry, this game's file is broken or missing! (404 Not Found)</h2><p>We tried looking for backups but couldn't find any for ${gameObj.name}.</p>`
+						);
 						iframe.contentDocument.close();
 					}
 				} catch (err) {
 					iframe.contentDocument.open();
-					iframe.contentDocument.write(`<h2>Sorry, this game's file is broken or missing! (404 Not Found)</h2><p>We tried looking for backups but couldn't find any for ${gameObj.name}.</p>`);
+					iframe.contentDocument.write(
+						`<h2>Sorry, this game's file is broken or missing! (404 Not Found)</h2><p>We tried looking for backups but couldn't find any for ${gameObj.name}.</p>`
+					);
 					iframe.contentDocument.close();
 				}
 			}
@@ -1228,45 +1398,77 @@ function GamesScreen() {
 
 	return html`
 		<div style="height: 100%; width: 100%;">
-			${use(this.activeGameUrl, active => active ? html`
-				<div class="game-overlay">
-					<div class="game-overlay-header">
-						<button on:click=${this.closeGame}>
-							<i class="ri-arrow-left-line"></i> Back to Arcades
-						</button>
-					</div>
-					<div class="game-overlay-content">
-						<iframe id="game-content-frame"></iframe>
-					</div>
-				</div>
-			` : '')}
+			${use(this.activeGameUrl, (active) =>
+				active
+					? html`
+							<div class="game-overlay">
+								<div class="game-overlay-header">
+									<button on:click=${this.closeGame}>
+										<i class="ri-arrow-left-line"></i> Back to Arcades
+									</button>
+								</div>
+								<div class="game-overlay-content">
+									<iframe id="game-content-frame"></iframe>
+								</div>
+							</div>
+						`
+					: ""
+			)}
 
 			<ul class="navbar">
 				<li style="margin-top: 10px;"></li>
 				<hr />
-				<li><span class="material-symbols-outlined" on:click=${this.onHome}>cottage</span></li>
-				<li><span id="navactive" class="material-symbols-outlined">joystick</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onApps}>apps</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onOpenProxy}>public</span></li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onHome}
+						>cottage</span
+					>
+				</li>
+				<li>
+					<span id="navactive" class="material-symbols-outlined">joystick</span>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onApps}
+						>apps</span
+					>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onOpenProxy}
+						>public</span
+					>
+				</li>
 				<hr />
-				<li><span class="material-symbols-outlined" on:click=${this.onSettings}>tune</span></li>
-				<li><i class="fa-brands fa-discord"></i></li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onSettings}
+						>tune</span
+					>
+				</li>
 			</ul>
 
 			<div class="blobbig"></div>
 
 			<div class="games-container">
 				<div class="games-header">Games Arcades</div>
-				
-				${use(this.loading, l => l ? html`<div class="loading">Loading games...</div>` : '')}
-				
+
+				${use(this.loading, (l) =>
+					l ? html`<div class="loading">Loading games...</div>` : ""
+				)}
+
 				<div class="games-grid">
-					${use(this.games, games => games.map(game => html`
-						<div class="game-card" on:click=${() => this.openGame(game)}>
-							<img class="game-cover" src=${game.cover || 'https://via.placeholder.com/150'} loading="lazy" alt=${game.name} />
-							<div class="game-title">${game.name}</div>
-						</div>
-					`))}
+					${use(this.games, (games) =>
+						games.map(
+							(game) => html`
+								<div class="game-card" on:click=${() => this.openGame(game)}>
+									<img
+										class="game-cover"
+										src=${game.cover || "https://via.placeholder.com/150"}
+										loading="lazy"
+										alt=${game.name}
+									/>
+									<div class="game-title">${game.name}</div>
+								</div>
+							`
+						)
+					)}
 				</div>
 			</div>
 		</div>
@@ -1274,7 +1476,7 @@ function GamesScreen() {
 }
 
 function AppsScreen() {
-	this.searchQuery = '';
+	this.searchQuery = "";
 	this.css = `
 		--background-color: #000;
 		--header-active-background-color: rgba(140, 0, 255, 0.55);
@@ -1446,38 +1648,90 @@ function AppsScreen() {
 	`;
 
 	const appsList = [
-		{ name: "Request a app", url: "https://docs.google.com/forms", customImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Google_Forms_icon_2014.png/640px-Google_Forms_icon_2014.png", gradient: true },
+		{
+			name: "Request a app",
+			url: "https://docs.google.com/forms",
+			customImg:
+				"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Google_Forms_icon_2014.png/640px-Google_Forms_icon_2014.png",
+			gradient: true,
+		},
 		{ name: "Amazon", url: "https://amazon.com", domain: "amazon.com" },
 		{ name: "Luna", url: "https://luna.amazon.com", domain: "luna.amazon.com" },
-		{ name: "Character.ai", url: "https://character.ai", domain: "character.ai" },
+		{
+			name: "Character.ai",
+			url: "https://character.ai",
+			domain: "character.ai",
+		},
 		{ name: "Chess.com", url: "https://chess.com", domain: "chess.com" },
-		{ name: "Coolmath Games", url: "https://coolmathgames.com", domain: "coolmathgames.com" },
+		{
+			name: "Coolmath Games",
+			url: "https://coolmathgames.com",
+			domain: "coolmathgames.com",
+		},
 		{ name: "Discord", url: "https://discord.com/app", domain: "discord.com" },
 		{ name: "ESPN", url: "https://espn.com", domain: "espn.com" },
 		{ name: "FlixHQ", url: "https://flixhq.to", domain: "flixhq.to" },
-		{ name: "GeForce NOW", url: "https://play.geforcenow.com", domain: "geforcenow.com" },
+		{
+			name: "GeForce NOW",
+			url: "https://play.geforcenow.com",
+			domain: "geforcenow.com",
+		},
 		{ name: "GitHub", url: "https://github.com", domain: "github.com" },
 		{ name: "HBO Max", url: "https://max.com", domain: "max.com" },
-		{ name: "Newgrounds", url: "https://newgrounds.com", domain: "newgrounds.com" },
+		{
+			name: "Newgrounds",
+			url: "https://newgrounds.com",
+			domain: "newgrounds.com",
+		},
 		{ name: "OpenAI", url: "https://chat.openai.com", domain: "openai.com" },
-		{ name: "Paramount+", url: "https://paramountplus.com", domain: "paramountplus.com" },
-		{ name: "Pinterest", url: "https://pinterest.com", domain: "pinterest.com" },
+		{
+			name: "Paramount+",
+			url: "https://paramountplus.com",
+			domain: "paramountplus.com",
+		},
+		{
+			name: "Pinterest",
+			url: "https://pinterest.com",
+			domain: "pinterest.com",
+		},
 		{ name: "Pixlr", url: "https://pixlr.com", domain: "pixlr.com" },
 		{ name: "Poki", url: "https://poki.com", domain: "poki.com" },
-		{ name: "CrazyGames", url: "https://crazygames.com", domain: "crazygames.com" },
+		{
+			name: "CrazyGames",
+			url: "https://crazygames.com",
+			domain: "crazygames.com",
+		},
 		{ name: "SnapChat", url: "https://snapchat.com", domain: "snapchat.com" },
-		{ name: "SoundCloud", url: "https://soundcloud.com", domain: "soundcloud.com" },
-		{ name: "Telegram", url: "https://web.telegram.org", domain: "telegram.org" },
+		{
+			name: "SoundCloud",
+			url: "https://soundcloud.com",
+			domain: "soundcloud.com",
+		},
+		{
+			name: "Telegram",
+			url: "https://web.telegram.org",
+			domain: "telegram.org",
+		},
 		{ name: "Temu", url: "https://temu.com", domain: "temu.com" },
 		{ name: "TikTok", url: "https://tiktok.com", domain: "tiktok.com" },
 		{ name: "Tumblr", url: "https://tumblr.com", domain: "tumblr.com" },
 		{ name: "Twitch", url: "https://twitch.tv", domain: "twitch.tv" },
-		{ name: "X", url: "https://x.com", domain: "x.com", customImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/X_logo_2023.svg/1200px-X_logo_2023.svg.png" },
+		{
+			name: "X",
+			url: "https://x.com",
+			domain: "x.com",
+			customImg:
+				"https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/X_logo_2023.svg/1200px-X_logo_2023.svg.png",
+		},
 		{ name: "VS Code", url: "https://vscode.dev", domain: "vscode.dev" },
 		{ name: "Wattpad", url: "https://wattpad.com", domain: "wattpad.com" },
-		{ name: "RetroArch", url: "https://retroarch.com", domain: "retroarch.com" },
+		{
+			name: "RetroArch",
+			url: "https://retroarch.com",
+			domain: "retroarch.com",
+		},
 		{ name: "Y8", url: "https://y8.com", domain: "y8.com" },
-		{ name: "YouTube", url: "https://youtube.com", domain: "youtube.com" }
+		{ name: "YouTube", url: "https://youtube.com", domain: "youtube.com" },
 	];
 
 	this.openApp = (app) => {
@@ -1487,22 +1741,40 @@ function AppsScreen() {
 
 	setTimeout(() => {
 		if (window.particlesJS) {
-			window.particlesJS('particles-apps', {
+			window.particlesJS("particles-apps", {
 				particles: {
 					number: { value: 86, density: { enable: true, value_area: 800 } },
-					color: { value: '#ffffff' },
-					shape: { type: 'circle' },
+					color: { value: "#ffffff" },
+					shape: { type: "circle" },
 					opacity: { value: 0.5, random: false, anim: { enable: false } },
 					size: { value: 3, random: true, anim: { enable: false } },
-					line_linked: { enable: true, distance: 150, color: '#ffffff', opacity: 0.4, width: 1 },
-					move: { enable: true, speed: 2, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false }
+					line_linked: {
+						enable: true,
+						distance: 150,
+						color: "#ffffff",
+						opacity: 0.4,
+						width: 1,
+					},
+					move: {
+						enable: true,
+						speed: 2,
+						direction: "none",
+						random: false,
+						straight: false,
+						out_mode: "out",
+						bounce: false,
+					},
 				},
 				interactivity: {
-					detect_on: 'window',
-					events: { onhover: { enable: false }, onclick: { enable: true, mode: 'push' }, resize: true },
-					modes: { push: { particles_nb: 10 } }
+					detect_on: "window",
+					events: {
+						onhover: { enable: false },
+						onclick: { enable: true, mode: "push" },
+						resize: true,
+					},
+					modes: { push: { particles_nb: 10 } },
 				},
-				retina_detect: true
+				retina_detect: true,
 			});
 		}
 	}, 100);
@@ -1513,49 +1785,78 @@ function AppsScreen() {
 			<ul class="navbar">
 				<li style="margin-top: 10px;"></li>
 				<hr />
-				<li><span class="material-symbols-outlined" on:click=${this.onHome}>cottage</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onGames}>joystick</span></li>
-				<li><span id="navactive" class="material-symbols-outlined">apps</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onOpenProxy}>public</span></li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onHome}
+						>cottage</span
+					>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onGames}
+						>joystick</span
+					>
+				</li>
+				<li>
+					<span id="navactive" class="material-symbols-outlined">apps</span>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onOpenProxy}
+						>public</span
+					>
+				</li>
 				<hr />
-				<li><span class="material-symbols-outlined" on:click=${this.onSettings}>tune</span></li>
-				<li><i class="fa-brands fa-discord"></i></li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onSettings}
+						>tune</span
+					>
+				</li>
 			</ul>
 
 			<div class="apps-container">
 				<div class="search-header">
-					<input 
+					<input
 						class="search-header__input"
 						type="text"
-						placeholder="Search Space for Apps..." 
+						placeholder="search up something bigaa"
 						bind:value=${use(this.searchQuery)}
-						on:input=${(e) => this.searchQuery = e.target.value}
+						on:input=${(e) => (this.searchQuery = e.target.value)}
 					/>
 				</div>
-				
+
 				<div class="apps-grid">
-					${use(this.searchQuery, query => {
-						const filtered = appsList.filter(a => a.name.toLowerCase().includes(query.toLowerCase()));
-						return filtered.map(app => {
-							const rawUrl = app.customImg || `https://www.google.com/s2/favicons?domain=${app.domain}&sz=128`;
+					${use(this.searchQuery, (query) => {
+						const filtered = appsList.filter((a) =>
+							a.name.toLowerCase().includes(query.toLowerCase())
+						);
+						return filtered.map((app) => {
+							const rawUrl =
+								app.customImg ||
+								`https://www.google.com/s2/favicons?domain=${app.domain}&sz=128`;
 							let proxiedUrl = `https://wsrv.nl/?url=${encodeURIComponent(rawUrl)}`;
 							// Request a app and X use wikimedia which wsrv might block, use dicebear as direct fallback wrapped too
-							if(app.domain && !app.customImg) proxiedUrl += '&default=' + encodeURIComponent(`https://api.dicebear.com/7.x/initials/png?seed=${app.name}&backgroundColor=111111&textColor=ffffff`);
-							
+							if (app.domain && !app.customImg)
+								proxiedUrl +=
+									"&default=" +
+									encodeURIComponent(
+										`https://api.dicebear.com/7.x/initials/png?seed=${app.name}&backgroundColor=111111&textColor=ffffff`
+									);
+
 							return html`
-							<div class="app-card ${app.gradient ? 'gradient' : ''}" on:click=${() => this.openApp(app)}>
-								<img 
-									referrerPolicy="no-referrer"
-									crossorigin="anonymous"
-									src=${proxiedUrl} 
-									on:error=${(e) => { 
-										e.target.onerror = null; 
-										e.target.src = `https://wsrv.nl/?url=${encodeURIComponent('https://api.dicebear.com/7.x/initials/png?seed=' + app.name + '&backgroundColor=111111&textColor=ffffff')}`; 
-									}}
-									alt=${app.name} 
-								/>
-								<span>${app.name}</span>
-							</div>
+								<div
+									class="app-card ${app.gradient ? "gradient" : ""}"
+									on:click=${() => this.openApp(app)}
+								>
+									<img
+										referrerpolicy="no-referrer"
+										crossorigin="anonymous"
+										src=${proxiedUrl}
+										on:error=${(e) => {
+											e.target.onerror = null;
+											e.target.src = `https://wsrv.nl/?url=${encodeURIComponent("https://api.dicebear.com/7.x/initials/png?seed=" + app.name + "&backgroundColor=111111&textColor=ffffff")}`;
+										}}
+										alt=${app.name}
+									/>
+									<span>${app.name}</span>
+								</div>
 							`;
 						});
 					})}
@@ -1563,6 +1864,32 @@ function AppsScreen() {
 			</div>
 		</div>
 	`;
+}
+
+window.applyTabCloak = function(cloak) {
+	const CLOAKS = {
+		none: { title: "Scramjet", icon: "/favicon.webp" },
+		desmos: { title: "Desmos | Graphing Calculator", icon: "https://www.desmos.com/favicon.ico" },
+		classroom: { title: "Classes", icon: "https://ssl.gstatic.com/classroom/favicon.png" },
+		drive: { title: "My Drive - Google Drive", icon: "https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png" },
+		khan: { title: "Khan Academy | Free Online Courses, Lessons & Practice", icon: "https://cdn.kastatic.org/images/favicon.ico" },
+		quizlet: { title: "Flashcards, learning tools and textbook solutions | Quizlet", icon: "https://assets.quizlet.com/a/j/favicon.bf2138ad3ccb42b.ico" },
+		schoology: { title: "Home | Schoology", icon: "https://asset-cdn.schoology.com/sites/all/themes/schoology_theme/favicon.ico" }
+	};
+	const data = CLOAKS[cloak] || CLOAKS.none;
+	document.title = data.title;
+	
+	let link = document.querySelector("link[rel~='icon']");
+	if (!link) {
+		link = document.createElement('link');
+		link.rel = 'icon';
+		document.getElementsByTagName('head')[0].appendChild(link);
+	}
+	link.href = data.icon;
+};
+
+if (store.tabCloak) {
+	window.applyTabCloak(store.tabCloak);
 }
 
 function SettingsScreen() {
@@ -1573,6 +1900,9 @@ function SettingsScreen() {
 		--text-color: #ffffff;
 		--navbar-background-color: rgb(22, 22, 22);
 		--hr-background: rgba(160, 160, 160, 0.274);
+		--link-hover-color: #7d2ae8;
+		--dshadow3: #ff00d4;
+		--dshadow4: #8400ff;
 
 		background-color: var(--background-color);
 		height: 100%;
@@ -1748,31 +2078,196 @@ function SettingsScreen() {
 		input:checked + .slider:before { transform: translateX(20px); background-color: white; }
 
 		hr { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 15px 0; }
+
+		.blob {
+			box-shadow: 0 0 150px 100px var(--link-hover-color);
+			border-radius: 50%;
+			height: 290px;
+			width: 290px;
+			background-image: radial-gradient(farthest-corner at 50% 50%, #ffffff, var(--dshadow3));
+			background-blend-mode: multiply;
+			filter: blur(50px) contrast(1.1);
+			position: absolute;
+			transform: translate(-50%, -50%);
+			left: 47vw;
+			top: 100vh;
+			z-index: 1;
+		}
+
+		.blobbig {
+			box-shadow: 0 0 150px 100px var(--link-hover-color);
+			border-radius: 100%;
+			height: 45vh;
+			width: 75vw;
+			opacity: 0.15;
+			background-image: radial-gradient(farthest-corner at 50% 50%, #ffffff, var(--dshadow4));
+			background-blend-mode: multiply;
+			filter: blur(50px) contrast(1.1);
+			position: absolute;
+			transform: translate(-50%, -35%);
+			left: 47vw;
+			top: 100vh;
+			z-index: 1;
+		}
+
+		.blobsmall {
+			box-shadow: 0 0 150px 50px var(--dshadow4);
+			border-radius: 50%;
+			height: 50px;
+			width: 340px;
+			background-image: radial-gradient(farthest-corner at 50% 50%, #ffffff, var(--dshadow3));
+			background-blend-mode: multiply;
+			filter: blur(50px) contrast(1.2);
+			position: absolute;
+			transform: translate(-50%, -50%);
+			left: 60vw;
+			top: 100vh;
+			z-index: 1;
+		}
+
+		.blobtop {
+			box-shadow: 0 0 1px 20px var(--dshadow4);
+			border-radius: 50%;
+			height: 230px;
+			width: 20px;
+			background-image: radial-gradient(farthest-corner at 50% 50%, #ffffff, var(--dshadow3));
+			background-blend-mode: multiply;
+			filter: blur(50px) contrast(1.1);
+			position: absolute;
+			transform: translate(-50%, -50%);
+			rotate: -20deg;
+			left: 41.6vw;
+			top: calc(89vh - 200px);
+			z-index: 1;
+		}
+
+		#particles-settings {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			left: 0;
+			z-index: 2;
+		}
 	`;
 
-	this.activeTab = 'cloaking';
+	this.activeTab = "cloaking";
 
 	const changeTab = (tabId) => {
 		this.activeTab = tabId;
-		this.mount();
 	};
 
-	let transportOutput = store.transport;
+	setTimeout(() => {
+		if (window.particlesJS) {
+			window.particlesJS("particles-settings", {
+				particles: {
+					number: { value: 86, density: { enable: true, value_area: 800 } },
+					color: { value: "#ffffff" },
+					shape: { type: "circle" },
+					opacity: { value: 1, random: true, anim: { enable: false } },
+					size: { value: 2, random: true, anim: { enable: false } },
+					line_linked: { enable: false },
+					move: {
+						enable: true,
+						speed: 0.5,
+						direction: "top",
+						random: false,
+						straight: false,
+						out_mode: "out",
+						bounce: false,
+					},
+				},
+				interactivity: {
+					detect_on: "window",
+					events: {
+						onhover: { enable: false },
+						onclick: { enable: false },
+						resize: true,
+					},
+					modes: { push: { particles_nb: 10 } },
+				},
+				retina_detect: true,
+			});
+		}
+	}, 100);
+
+	this.launchAboutBlank = () => {
+		let win = window.open('about:blank', '_blank');
+		if (!win) {
+			alert('Please allow popups to launch About:Blank.');
+			return;
+		}
+		let iframe = win.document.createElement('iframe');
+		iframe.src = location.href;
+		iframe.style.width = '100vw';
+		iframe.style.height = '100vh';
+		iframe.style.border = 'none';
+		iframe.style.margin = '0';
+		win.document.body.style.margin = '0';
+		win.document.body.appendChild(iframe);
+		location.replace('https://classroom.google.com/');
+	};
+
+	this.launchBlob = () => {
+		const blob = new Blob(
+			[`<!DOCTYPE html><html><head><title>Tasks</title><link rel="icon" href="https://ssl.gstatic.com/images/branding/product/1x/tasks_2021_32dp.png"></head><body style="margin:0;"><iframe src="${location.href}" style="width:100vw;height:100vh;border:none;margin:0;"></iframe></body></html>`],
+			{ type: "text/html" }
+		);
+		const url = URL.createObjectURL(blob);
+		let win = window.open(url, '_blank');
+		if (!win) {
+			alert('Please allow popups to launch Blob.');
+			return;
+		}
+		location.replace('https://classroom.google.com/');
+	};
 
 	return html`
-		<div style="height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; position: relative;">
+		<div
+			style="height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; position: relative;"
+		>
+			<div style="z-index: 1;">
+				<div class="blob"></div>
+				<div class="blobbig"></div>
+				<div class="blobsmall"></div>
+				<div class="blobtop"></div>
+				<div id="particles-settings"></div>
+			</div>
+			
 			<ul class="navbar" style="z-index: 2000;">
 				<li style="margin-left: 0px; margin-top: 10px; margin-bottom: 5px;">
-					<img class="logo" src="https://dev.desmos.live.cdn.cloudflare.net/assets/logo.webp" alt="Logo" onerror="this.src='https://api.dicebear.com/7.x/initials/png?seed=D&backgroundColor=111111&textColor=ffffff'" />
+					<img
+						class="logo"
+						src="https://dev.desmos.live.cdn.cloudflare.net/assets/logo.webp"
+						alt="Logo"
+						onerror="this.src='https://api.dicebear.com/7.x/initials/png?seed=D&backgroundColor=111111&textColor=ffffff'"
+					/>
 				</li>
 				<hr style="margin-top: 5px" />
-				<li><span class="material-symbols-outlined" on:click=${this.onHome}>cottage</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onGames}>joystick</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onApps}>apps</span></li>
-				<li><span class="material-symbols-outlined" on:click=${this.onOpenProxy}>public</span></li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onHome}
+						>cottage</span
+					>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onGames}
+						>joystick</span
+					>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onApps}
+						>apps</span
+					>
+				</li>
+				<li>
+					<span class="material-symbols-outlined" on:click=${this.onOpenProxy}
+						>public</span
+					>
+				</li>
 				<hr />
-				<li><span id="navactive" class="material-symbols-outlined">tune</span></li>
-				<li><i class="fa-brands fa-discord" style="margin-top: 10px; font-size: 22px;"></i></li>
+				<li>
+					<span id="navactive" class="material-symbols-outlined">tune</span>
+				</li>
 			</ul>
 
 			<div
@@ -1794,269 +2289,634 @@ function SettingsScreen() {
 				<ul class="sideSnav">
 					<h1>Settings</h1>
 					<div id="settingsShape" class="settingsShape"></div>
-					
-					<li class="settingItem ${this.activeTab === 'cloaking' ? 'active' : ''}" on:click=${() => changeTab('cloaking')}>
-						<span class="material-symbols-outlined" style="margin-right: 8px;">ad_group_off</span>Cloaking
+
+					<li
+						class="settingItem ${use(this.activeTab, (tab) =>
+							tab === "cloaking" ? "active" : ""
+						)}"
+						on:click=${() => changeTab("cloaking")}
+					>
+						<span class="material-symbols-outlined" style="margin-right: 8px;"
+							>ad_group_off</span
+						>Cloaking
 					</li>
-					<li class="settingItem ${this.activeTab === 'performance' ? 'active' : ''}" on:click=${() => changeTab('performance')}>
-						<span class="material-symbols-outlined" style="margin-right: 8px;">speed</span>Performance
+					<li
+						class="settingItem ${use(this.activeTab, (tab) =>
+							tab === "performance" ? "active" : ""
+						)}"
+						on:click=${() => changeTab("performance")}
+					>
+						<span class="material-symbols-outlined" style="margin-right: 8px;"
+							>speed</span
+						>Performance
 					</li>
-					<li class="settingItem ${this.activeTab === 'themes' ? 'active' : ''}" on:click=${() => changeTab('themes')}>
-						<span class="material-symbols-outlined" style="margin-right: 8px;">palette</span>Themes
+					<li
+						class="settingItem ${use(this.activeTab, (tab) =>
+							tab === "themes" ? "active" : ""
+						)}"
+						on:click=${() => changeTab("themes")}
+					>
+						<span class="material-symbols-outlined" style="margin-right: 8px;"
+							>palette</span
+						>Themes
 					</li>
-					<li class="settingItem ${this.activeTab === 'proxy' ? 'active' : ''}" on:click=${() => changeTab('proxy')}>
-						<span class="material-symbols-outlined" style="margin-right: 8px;">public</span>Proxy & Browser
+					<li
+						class="settingItem ${use(this.activeTab, (tab) =>
+							tab === "proxy" ? "active" : ""
+						)}"
+						on:click=${() => changeTab("proxy")}
+					>
+						<span class="material-symbols-outlined" style="margin-right: 8px;"
+							>public</span
+						>Proxy & Browser
 					</li>
-					
-					<hr style="margin: 10px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.05);" />
-					
-					<li class="settingItem ${this.activeTab === 'account' ? 'active' : ''}" on:click=${() => changeTab('account')}>
-						<span class="material-symbols-outlined" style="margin-right: 8px;">account_circle</span>Account
+
+					<hr
+						style="margin: 10px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.05);"
+					/>
+
+					<li
+						class="settingItem ${use(this.activeTab, (tab) =>
+							tab === "account" ? "active" : ""
+						)}"
+						on:click=${() => changeTab("account")}
+					>
+						<span class="material-symbols-outlined" style="margin-right: 8px;"
+							>account_circle</span
+						>Account
 					</li>
-					<li class="settingItem ${this.activeTab === 'about' ? 'active' : ''}" on:click=${() => changeTab('about')}>
-						<span class="material-symbols-outlined" style="margin-right: 8px;">help</span>About & Statistics
+					<li
+						class="settingItem ${use(this.activeTab, (tab) =>
+							tab === "about" ? "active" : ""
+						)}"
+						on:click=${() => changeTab("about")}
+					>
+						<span class="material-symbols-outlined" style="margin-right: 8px;"
+							>help</span
+						>About & Statistics
 					</li>
-					
-					<hr style="margin: 10px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.05);" />
-					
-					<li class="settingItem ${this.activeTab === 'news' ? 'active' : ''}" on:click=${() => changeTab('news')}>
-						<span class="material-symbols-outlined" style="margin-right: 8px;">rocket_launch</span>News & Updates
+
+					<hr
+						style="margin: 10px 0; border: none; border-bottom: 1px solid rgba(255,255,255,0.05);"
+					/>
+
+					<li
+						class="settingItem ${use(this.activeTab, (tab) =>
+							tab === "news" ? "active" : ""
+						)}"
+						on:click=${() => changeTab("news")}
+					>
+						<span class="material-symbols-outlined" style="margin-right: 8px;"
+							>rocket_launch</span
+						>News & Updates
 					</li>
-					<li class="settingItem ${this.activeTab === 'faq' ? 'active' : ''}" on:click=${() => changeTab('faq')}>
-						<span class="material-symbols-outlined" style="margin-right: 8px;">contact_support</span>FAQ
+					<li
+						class="settingItem ${use(this.activeTab, (tab) =>
+							tab === "faq" ? "active" : ""
+						)}"
+						on:click=${() => changeTab("faq")}
+					>
+						<span class="material-symbols-outlined" style="margin-right: 8px;"
+							>contact_support</span
+						>FAQ
 					</li>
 				</ul>
-				
+
 				<div class="scontent">
-					${this.activeTab === 'cloaking' ? html`
-						<h1 class="tab-title">Cloaking</h1>
-						<div class="settingsection">
-							<h1>About:Blank & Blob Cloaking</h1>
-							<p>About:Blank allows you to hide your tab history, and blockers such as GoGuardian by appearing that you are on a blank tab. If About:Blank doesn't work, then you can try using the blob cloaking which uses temporary data.</p>
-							<div style="display: flex; gap: 10px; width: 100%;">
-								<button class="splitbutton">Launch About:Blank</button>
-								<button class="splitbutton">Launch Blob</button>
-							</div>
-						</div>
+					${use(this.activeTab, (tab) => {
+						if (tab === "cloaking")
+							return html`
+								<div class="tabbed-content">
+									<h1 class="tab-title">Cloaking</h1>
+									<div class="settingsection">
+										<h1>About:Blank & Blob Cloaking</h1>
+										<p>
+											About:Blank allows you to hide your tab history, and
+											blockers such as GoGuardian by appearing that you are on a
+											blank tab. If About:Blank doesn't work, then you can try
+											using the blob cloaking which uses temporary data.
+										</p>
+										<div style="display: flex; gap: 10px; width: 100%;">
+											<button class="splitbutton" on:click=${this.launchAboutBlank}>Launch About:Blank</button>
+											<button class="splitbutton" on:click=${this.launchBlob}>Launch Blob</button>
+										</div>
+									</div>
 
-						<div class="settingsection">
-							<h1>Automatic cloaking</h1>
-							<p>This toggles automatic cloaking when the site first loads which hides the site from entering your history.</p>
-							<p><b>Note: Only one automatic cloaking toggle is allowed at a time.</b></p>
-							<hr />
-							<p style="margin-bottom: 5px;">Auto-Launch About:Blank</p>
-							<label class="switch"><input type="checkbox" /><span class="slider round"></span></label>
-							<p style="margin-bottom: 5px;">Auto-Launch Blob</p>
-							<label class="switch"><input type="checkbox" checked /><span class="slider round"></span></label>
-						</div>
+									<div class="settingsection">
+										<h1>Automatic cloaking</h1>
+										<p>
+											This toggles automatic cloaking when the site first loads
+											which hides the site from entering your history.
+										</p>
+										<p>
+											<b
+												>Note: Only one automatic cloaking toggle is allowed at
+												a time.</b
+											>
+										</p>
+										<hr />
+										<p style="margin-bottom: 5px;">Auto-Launch About:Blank</p>
+										<label class="switch"
+											><input 
+												type="checkbox" 
+												checked=${use(store.autoCloak, v => v === 'aboutBlank')}
+												on:change=${(e) => { store.autoCloak = e.target.checked ? 'aboutBlank' : 'none'; }}
+											/><span
+												class="slider round"
+											></span
+										></label>
+										<p style="margin-bottom: 5px;">Auto-Launch Blob</p>
+										<label class="switch"
+											><input 
+												type="checkbox" 
+												checked=${use(store.autoCloak, v => v === 'blob')}
+												on:change=${(e) => { store.autoCloak = e.target.checked ? 'blob' : 'none'; }}
+											/><span
+												class="slider round"
+											></span
+										></label>
+									</div>
 
-						<div class="settingsection">
-							<h1>Tab Cloaking</h1>
-							<p>Tab Cloaking cloaks the name of the tab & icon, so your tab stays hidden from sight. Select a cloak down below to activate it.</p>
-							<div class="dropdown">
-								<button class="dropdown-button">
-									<span>None (Default)</span>
-									<span class="material-symbols-outlined">chevron_right</span>
-								</button>
-							</div>
-						</div>
-						
-						<div class="settingsection">
-							<h1>Panic Key</h1>
-							<p>Press the selected keybind to go to another site quickly. You can set multiple keybinds by seperating them with a comma.</p>
-							<div class="pgroup">
-								<span class="material-symbols-outlined picon">keyboard</span>
-								<input placeholder="Set a keybind. Backtick by default" value="backtick" />
-							</div>
-							<button class="buttonreg" style="max-width: 200px;">Save</button>
-						</div>
-					` : ''}
+									<div class="settingsection">
+										<h1>Tab Cloaking</h1>
+										<p>
+											Tab Cloaking cloaks the name of the tab & icon, so your
+											tab stays hidden from sight. Select a cloak down below to
+											activate it.
+										</p>
+										<div class="dropdown">
+											<select
+												class="dropdown-button"
+												style="appearance: auto; background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; padding: 10px 15px; border-radius: 8px; cursor: pointer; outline: none;"
+												value=${use(store.tabCloak)}
+												on:change=${(e) => { store.tabCloak = e.target.value; window.applyTabCloak(e.target.value); }}
+											>
+												<option value="none" style="background: #111; color: white;">None (Default)</option>
+												<option value="desmos" style="background: #111; color: white;">Desmos</option>
+												<option value="classroom" style="background: #111; color: white;">Google Classroom</option>
+												<option value="drive" style="background: #111; color: white;">Google Drive</option>
+												<option value="khan" style="background: #111; color: white;">Khan Academy</option>
+												<option value="quizlet" style="background: #111; color: white;">Quizlet</option>
+												<option value="schoology" style="background: #111; color: white;">Schoology</option>
+											</select>
+										</div>
+									</div>
 
-					${this.activeTab === 'performance' ? html`
-						<h1 class="tab-title">Performance</h1>
-						<div class="settingsection">
-							<h1>Background Particles</h1>
-							<p>This enables the background star particle effects, this is on by default. <b>Performance Impact:</b> High on low-end devices</p>
-							<label class="switch" style="margin-top: 10px;"><input type="checkbox" checked /><span class="slider round"></span></label>
-						</div>
-					` : ''}
+									<div class="settingsection">
+										<h1>Panic Key</h1>
+										<p>
+											Press the selected keybind to go to another site quickly.
+											You can set multiple keybinds by seperating them with a
+											comma.
+										</p>
+										<div class="pgroup">
+											<span class="material-symbols-outlined picon"
+												>keyboard</span
+											>
+											<input
+												placeholder="Set a keybind. Backtick by default"
+												value="backtick"
+											/>
+										</div>
+										<button class="buttonreg" style="max-width: 200px;">
+											Save
+										</button>
+									</div>
+								</div>
+							`;
 
-					${this.activeTab === 'themes' ? html`
-						<h1 class="tab-title">Themes</h1>
-						<div class="settingsection">
-							<h1>Default Themes</h1>
-							<p>Here's some themes for you to choose from. You can also join our Discord for theme submissions, under suggestions.</p>
-							<div class="dropdown">
-								<button class="dropdown-button">
-									<span>Default</span>
-									<span class="material-symbols-outlined">chevron_right</span>
-								</button>
-							</div>
-						</div>
-					` : ''}
+						if (tab === "performance")
+							return html`
+								<div class="tabbed-content">
+									<h1 class="tab-title">Performance</h1>
+									<div class="settingsection">
+										<h1>Background Particles</h1>
+										<p>
+											This enables the background star particle effects, this is
+											on by default. <b>Performance Impact:</b> High on low-end
+											devices
+										</p>
+										<label class="switch" style="margin-top: 10px;"
+											><input type="checkbox" checked /><span
+												class="slider round"
+											></span
+										></label>
+									</div>
+								</div>
+							`;
 
-					${this.activeTab === 'proxy' ? html`
-						<h1 class="tab-title">Proxy & Browser</h1>
-						<div class="settingsection">
-							<h1>Proxy</h1>
-							<p>Proxies are what run the unblocking backend for you to enjoy the games and apps that we display.</p>
-							<p>Changing the proxy may make some games perform better, run sites faster, and may make your overall experience better. For more information, join our Discord.</p>
-							<div class="dropdown">
-								<button class="dropdown-button"><span>Scramjet</span><span class="material-symbols-outlined">chevron_right</span></button>
-							</div>
-						</div>
+						if (tab === "themes")
+							return html`
+								<div class="tabbed-content">
+									<h1 class="tab-title">Themes</h1>
+									<div class="settingsection">
+										<h1>Default Themes</h1>
+										<p>
+											Here's some themes for you to choose from. You can also
+											join our Discord for theme submissions, under suggestions.
+										</p>
+										<div class="dropdown">
+											<button class="dropdown-button">
+												<span>Default</span>
+												<span class="material-symbols-outlined"
+													>chevron_right</span
+												>
+											</button>
+										</div>
+									</div>
+								</div>
+							`;
 
-						<div class="settingsection">
-							<h1>Transport</h1>
-							<p>Transport is the method of how the proxy will transport information</p>
-							<p>Changing the transport may make some proxies perform better, but may also cause issues for others. Transport switching is an advanced feature, not recommended if you dont know what your doing.</p>
-							<div class="dropdown">
-								<button class="dropdown-button"><span>Libcurl</span><span class="material-symbols-outlined">chevron_right</span></button>
-							</div>
-							
-							<div style="display: flex; gap: 10px; margin-top: 15px;">
-								<button class="buttonreg" on:click=${() => { connection.setTransport("/baremod/index.mjs", [store.bareurl]); store.transport = "/baremod/index.mjs"; this.mount(); }}>bare server 3</button>
-								<button class="buttonreg" on:click=${() => { connection.setTransport("/libcurl/index.mjs", [{ wisp: store.wispurl }]); store.transport = "/libcurl/index.mjs"; this.mount(); }}>libcurl.js</button>
-								<button class="buttonreg" on:click=${() => { connection.setTransport("/epoxy/index.mjs", [{ wisp: store.wispurl }]); store.transport = "/epoxy/index.mjs"; this.mount(); }}>epoxy</button>
-							</div>
-							<p style="margin-top: 15px;"><b>Active configuration:</b> ${use(store.transport)}</p>
-						</div>
+						if (tab === "proxy")
+							return html`
+								<div class="tabbed-content">
+									<h1 class="tab-title">Proxy & Browser</h1>
+									<div class="settingsection">
+										<h1>Proxy</h1>
+										<p>
+											Proxies are what run the unblocking backend for you to
+											enjoy the games and apps that we display.
+										</p>
+										<p>
+											Changing the proxy may make some games perform better, run
+											sites faster, and may make your overall experience better.
+											For more information, join our Discord.
+										</p>
+										<div class="dropdown">
+											<select value=${store.proxy} on:change=${e => store.proxy = e.target.value} class="dropdown-button" style="appearance: auto; background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; padding: 10px 15px; border-radius: 8px; cursor: pointer; outline: none;">
+												<option value="scramjet" style="background: #111; color: white;">Scramjet</option>
+												<option value="ultraviolet" style="background: #111; color: white;">Ultraviolet</option>
+											</select>
+										</div>
+									</div>
 
-						<div class="settingsection">
-							<h1>Wisp Server</h1>
-							<p>Enter an Alternative Wisp Server to connect to. This url must start with a ws(s):// and end with a /</p>
-							<div class="pgroup">
-								<span class="material-symbols-outlined picon">dns</span>
-								<input bind:value=${use(store.wispurl)} on:input=${(e) => store.wispurl = e.target.value} spellcheck="false" />
-							</div>
-							
-							<p>Enter an Alternative Bare Server to connect to.</p>
-							<div class="pgroup">
-								<span class="material-symbols-outlined picon">dns</span>
-								<input bind:value=${use(store.bareurl)} on:input=${(e) => store.bareurl = e.target.value} spellcheck="false" />
-							</div>
-							
-							<div style="display: flex; gap: 10px; width: 100%; margin-top: 10px;">
-							    <button class="buttonreg">Save</button>
-							    <button class="buttonreg">Reset</button>
-							</div>
-						</div>
+									<div class="settingsection">
+										<h1>Transport</h1>
+										<p>
+											Transport is the method of how the proxy will transport
+											information
+										</p>
+										<p>
+											Changing the transport may make some proxies perform
+											better, but may also cause issues for others. Transport
+											switching is an advanced feature, not recommended if you
+											dont know what your doing.
+										</p>
+										<div class="dropdown">
+											<button class="dropdown-button">
+												<span>Libcurl</span
+												><span class="material-symbols-outlined"
+													>chevron_right</span
+												>
+											</button>
+										</div>
 
-						<div class="settingsection">
-							<h1>Browser</h1>
-							<p>This allows you to change settings about the browser and the elements within it. You can change the search engine or add/remove the utility bar.</p>
-							<hr />
-							<p>Search Engine</p>
-							<div class="dropdown">
-								<button class="dropdown-button"><span>DuckDuckGo (default)</span><span class="material-symbols-outlined">chevron_right</span></button>
-							</div>
-							<p style="margin-top: 15px;">Enable Utility Bar</p>
-							<p>This enables the basic top bar that you see when using the proxy. (Recommended)</p>
-							<label class="switch"><input type="checkbox" checked /><span class="slider round"></span></label>
-						</div>
-					` : ''}
+										<div style="display: flex; gap: 10px; margin-top: 15px;">
+											<button
+												class="buttonreg"
+												on:click=${() => {
+													connection.setTransport("/baremod/index.mjs", [
+														store.bareurl,
+													]);
+													store.transport = "/baremod/index.mjs";
+												}}
+											>
+												bare server 3
+											</button>
+											<button
+												class="buttonreg"
+												on:click=${() => {
+													connection.setTransport("/libcurl/index.mjs", [
+														{ wisp: store.wispurl },
+													]);
+													store.transport = "/libcurl/index.mjs";
+												}}
+											>
+												libcurl.js
+											</button>
+											<button
+												class="buttonreg"
+												on:click=${() => {
+													connection.setTransport("/epoxy/index.mjs", [
+														{ wisp: store.wispurl },
+													]);
+													store.transport = "/epoxy/index.mjs";
+												}}
+											>
+												epoxy
+											</button>
+										</div>
+										<p style="margin-top: 15px;">
+											<b>Active configuration:</b> ${store.transport}
+										</p>
+									</div>
 
-					${this.activeTab === 'account' ? html`
-						<h1 class="tab-title">Account Settings</h1>
-						<div class="settingsection">
-							<h1>Password Protection</h1>
-							<p>Protect your account with a password that way only you can view the site.</p>
-							<label class="switch"><input type="checkbox" /><span class="slider round"></span></label>
-							<p>Please remember that when setting your password, set it to something only you can remember, that way you do not get locked out of your account.</p>
-							<div class="pgroup">
-								<span class="material-symbols-outlined picon">lock</span>
-								<input type="password" placeholder="Set Password" />
-							</div>
-							<button class="buttonreg" style="max-width: 300px;">Save</button>
-						</div>
-						
-						<div class="settingsection">
-							<h1>Password Keybind</h1>
-							<p>Set the keybind to toggle the password appearing on screen. By default you will need to hold shift an then press <code style="background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px;">~</code> (left of the 1 key).</p>
-							<div class="pgroup">
-							    <span class="material-symbols-outlined picon">keyboard</span>
-							    <input placeholder="Set a keybind. Tilda by default" value="~" />
-							</div>
-							<button class="buttonreg" style="max-width: 300px;">Save</button>
-						</div>
-						
-						<div class="settingsection">
-							<h1>Import & Export Data</h1>
-							<p>Import simply loads your current userData and boots most of your user settings and data from the last site.</p>
-							<div style="display: flex; gap: 10px; width: 100%;">
-								<button class="splitbutton"><span class="material-symbols-outlined" style="font-size: 16px; margin-right: 5px; vertical-align: middle;">upload</span>Export Data</button>
-								<button class="splitbutton"><span class="material-symbols-outlined" style="font-size: 16px; margin-right: 5px; vertical-align: middle;">download</span>Import Data</button>
-							</div>
-						</div>
+									<div class="settingsection">
+										<h1>Wisp Server</h1>
+										<p>
+											Enter an Alternative Wisp Server to connect to. This url
+											must start with a ws(s):// and end with a /
+										</p>
+										<div class="pgroup">
+											<span class="material-symbols-outlined picon">dns</span>
+											<input
+												bind:value=${use(store.wispurl)}
+												on:input=${(e) => (store.wispurl = e.target.value)}
+												spellcheck="false"
+											/>
+										</div>
 
-						<div class="settingsection">
-							<h1>Wipe all Data</h1>
-							<p>Pressing this button will completely wipe all data, making it as if you never used this site. It is recommended that you export your data before doing this.</p>
-							<button class="buttonreg" style="background: rgba(255, 0, 0, 0.2); border-color: rgba(255, 0, 0, 0.5); width: 100%;">Wipe all Data</button>
-						</div>
-					` : ''}
+										<p>Enter an Alternative Bare Server to connect to.</p>
+										<div class="pgroup">
+											<span class="material-symbols-outlined picon">dns</span>
+											<input
+												bind:value=${use(store.bareurl)}
+												on:input=${(e) => (store.bareurl = e.target.value)}
+												spellcheck="false"
+											/>
+										</div>
 
-					${this.activeTab === 'about' ? html`
-						<h1 class="tab-title">About & Statistics</h1>
-						<div class="settingsection">
-							<h1>Development Team</h1>
-							<p>Space is completely open-source and is owned, maintained, and managed by the Twilight Development Group (TDG) at Night Network.</p>
-						</div>
-						<div class="settingsection">
-							<h1>Version & Analytics</h1>
-							<p style="margin-bottom: 5px;">You are currently on: <span style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">v1.1.0</span></p>
-							<p style="margin-bottom: 5px;">Server Status: <span style="background: rgba(0, 255, 0, 0.2); color: lightgreen; padding: 2px 6px; border-radius: 4px;">Running</span></p>
-							<p>Load Times: <span style="background: rgba(255, 255, 0, 0.2); color: yellow; padding: 2px 6px; border-radius: 4px;">Medium</span></p>
-						</div>
-					` : ''}
+										<div
+											style="display: flex; gap: 10px; width: 100%; margin-top: 10px;"
+										>
+											<button class="buttonreg">Save</button>
+											<button class="buttonreg">Reset</button>
+										</div>
+									</div>
 
-					${this.activeTab === 'news' ? html`
-						<h1 class="tab-title">News & Updates</h1>
-						<div class="settingsection">
-							<h1>Space has Updated! <span style="font-size: 12px; opacity: 0.7;">(Version release v1.1.0)</span></h1>
-							<p>Added more fixes! Join our Discord to get more updates and changes.</p>
-							<ul style="color: #aaa; font-size: 14px; padding-left: 20px;">
-								<li style="margin-bottom: 5px;">Themes</li>
-								<li style="margin-bottom: 5px;">Dropped support for Bare</li>
-								<li>Fixed Cloaking</li>
-							</ul>
-						</div>
-						
-						<div class="settingsection">
-							<h1>Space has released! <span style="font-size: 12px; opacity: 0.7;">(Version release v1.0.0)</span></h1>
-							<p>Enjoy using all of the fun and exciting features we have packed into this site!</p>
-							<ul style="color: #aaa; font-size: 14px; padding-left: 20px;">
-								<li style="margin-bottom: 5px;">Out of this world UI</li>
-								<li style="margin-bottom: 5px;">Games</li>
-								<li style="margin-bottom: 5px;">Apps</li>
-								<li style="margin-bottom: 5px;">Proxy</li>
-								<li>Cloaking</li>
-							</ul>
-						</div>
-					` : ''}
+									<div class="settingsection">
+										<h1>Browser</h1>
+										<p>
+											This allows you to change settings about the browser and
+											the elements within it. You can change the search engine
+											or add/remove the utility bar.
+										</p>
+										<hr />
+										<p>Search Engine</p>
+										<div class="dropdown">
+											<button class="dropdown-button">
+												<span>DuckDuckGo (default)</span
+												><span class="material-symbols-outlined"
+													>chevron_right</span
+												>
+											</button>
+										</div>
+										<p style="margin-top: 15px;">Enable Utility Bar</p>
+										<p>
+											This enables the basic top bar that you see when using the
+											proxy. (Recommended)
+										</p>
+										<label class="switch"
+											><input type="checkbox" checked /><span
+												class="slider round"
+											></span
+										></label>
+									</div>
+								</div>
+							`;
 
-					${this.activeTab === 'faq' ? html`
-						<h1 class="tab-title">Frequently asked questions</h1>
-						<div class="settingsection">
-							<h1>Where can I find links?</h1>
-							<p>You can find links by joining our Discord. We have a community links channel, a link bot for dispensing links, and weekly links.</p>
-						</div>
-						<div class="settingsection">
-							<h1>Why do some sites not load/work?</h1>
-							<p>There can be a number of reason a site doesnt load but some of the common ones are listed below.</p>
-							<ul style="color: #aaa; font-size: 14px; padding-left: 20px;">
-								<li style="margin-bottom: 5px;">Proxy Server doesn't support the site(s)</li>
-								<li style="margin-bottom: 5px;">Our servers are either down or experiencing high loads</li>
-								<li style="margin-bottom: 5px;">Issue with the actual site you are visiting</li>
-								<li>Security flaggers!</li>
-							</ul>
-						</div>
-					` : ''}
+						if (tab === "account")
+							return html`
+								<div class="tabbed-content">
+									<h1 class="tab-title">Account Settings</h1>
+									<div class="settingsection">
+										<h1>Password Protection</h1>
+										<p>
+											Protect your account with a password that way only you can
+											view the site.
+										</p>
+										<label class="switch"
+											><input type="checkbox" /><span
+												class="slider round"
+											></span
+										></label>
+										<p>
+											Please remember that when setting your password, set it to
+											something only you can remember, that way you do not get
+											locked out of your account.
+										</p>
+										<div class="pgroup">
+											<span class="material-symbols-outlined picon">lock</span>
+											<input type="password" placeholder="Set Password" />
+										</div>
+										<button class="buttonreg" style="max-width: 300px;">
+											Save
+										</button>
+									</div>
+
+									<div class="settingsection">
+										<h1>Password Keybind</h1>
+										<p>
+											Set the keybind to toggle the password appearing on
+											screen. By default you will need to hold shift an then
+											press
+											<code
+												style="background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px;"
+												>~</code
+											>
+											(left of the 1 key).
+										</p>
+										<div class="pgroup">
+											<span class="material-symbols-outlined picon"
+												>keyboard</span
+											>
+											<input
+												placeholder="Set a keybind. Tilda by default"
+												value="~"
+											/>
+										</div>
+										<button class="buttonreg" style="max-width: 300px;">
+											Save
+										</button>
+									</div>
+
+									<div class="settingsection">
+										<h1>Import & Export Data</h1>
+										<p>
+											Import simply loads your current userData and boots most
+											of your user settings and data from the last site.
+										</p>
+										<div style="display: flex; gap: 10px; width: 100%;">
+											<button class="splitbutton">
+												<span
+													class="material-symbols-outlined"
+													style="font-size: 16px; margin-right: 5px; vertical-align: middle;"
+													>upload</span
+												>Export Data
+											</button>
+											<button class="splitbutton">
+												<span
+													class="material-symbols-outlined"
+													style="font-size: 16px; margin-right: 5px; vertical-align: middle;"
+													>download</span
+												>Import Data
+											</button>
+										</div>
+									</div>
+
+									<div class="settingsection">
+										<h1>Wipe all Data</h1>
+										<p>
+											Pressing this button will completely wipe all data, making
+											it as if you never used this site. It is recommended that
+											you export your data before doing this.
+										</p>
+										<button
+											class="buttonreg"
+											style="background: rgba(255, 0, 0, 0.2); border-color: rgba(255, 0, 0, 0.5); width: 100%;"
+										>
+											Wipe all Data
+										</button>
+									</div>
+								</div>
+							`;
+
+						if (tab === "about")
+							return html`
+								<div class="tabbed-content">
+									<h1 class="tab-title">About & Statistics</h1>
+									<div class="settingsection">
+										<h1>Development Team</h1>
+										<p>
+											Space is completely open-source and is owned, maintained,
+											and managed by the Twilight Development Group (TDG) at
+											Night Network.
+										</p>
+									</div>
+									<div class="settingsection">
+										<h1>Version & Analytics</h1>
+										<p style="margin-bottom: 5px;">
+											You are currently on:
+											<span
+												style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;"
+												>v1.1.0</span
+											>
+										</p>
+										<p style="margin-bottom: 5px;">
+											Server Status:
+											<span
+												style="background: rgba(0, 255, 0, 0.2); color: lightgreen; padding: 2px 6px; border-radius: 4px;"
+												>Running</span
+											>
+										</p>
+										<p>
+											Load Times:
+											<span
+												style="background: rgba(255, 255, 0, 0.2); color: yellow; padding: 2px 6px; border-radius: 4px;"
+												>Medium</span
+											>
+										</p>
+									</div>
+								</div>
+							`;
+
+						if (tab === "news")
+							return html`
+								<div class="tabbed-content">
+									<h1 class="tab-title">News & Updates</h1>
+									<div class="settingsection">
+										<h1>
+											Space has Updated!
+											<span style="font-size: 12px; opacity: 0.7;"
+												>(Version release v1.1.0)</span
+											>
+										</h1>
+										<p>
+											Added more fixes! Join our Discord to get more updates and
+											changes.
+										</p>
+										<ul
+											style="color: #aaa; font-size: 14px; padding-left: 20px;"
+										>
+											<li style="margin-bottom: 5px;">Themes</li>
+											<li style="margin-bottom: 5px;">
+												Dropped support for Bare
+											</li>
+											<li>Fixed Cloaking</li>
+										</ul>
+									</div>
+
+									<div class="settingsection">
+										<h1>
+											Space has released!
+											<span style="font-size: 12px; opacity: 0.7;"
+												>(Version release v1.0.0)</span
+											>
+										</h1>
+										<p>
+											Enjoy using all of the fun and exciting features we have
+											packed into this site!
+										</p>
+										<ul
+											style="color: #aaa; font-size: 14px; padding-left: 20px;"
+										>
+											<li style="margin-bottom: 5px;">Out of this world UI</li>
+											<li style="margin-bottom: 5px;">Games</li>
+											<li style="margin-bottom: 5px;">Apps</li>
+											<li style="margin-bottom: 5px;">Proxy</li>
+											<li>Cloaking</li>
+										</ul>
+									</div>
+								</div>
+							`;
+
+						if (tab === "faq")
+							return html`
+								<div class="tabbed-content">
+									<h1 class="tab-title">Frequently asked questions</h1>
+									<div class="settingsection">
+										<h1>Where can I find links?</h1>
+										<p>
+											You can find links by joining our Discord. We have a
+											community links channel, a link bot for dispensing links,
+											and weekly links.
+										</p>
+									</div>
+									<div class="settingsection">
+										<h1>Why do some sites not load/work?</h1>
+										<p>
+											There can be a number of reason a site doesnt load but
+											some of the common ones are listed below.
+										</p>
+										<ul
+											style="color: #aaa; font-size: 14px; padding-left: 20px;"
+										>
+											<li style="margin-bottom: 5px;">
+												Proxy Server doesn't support the site(s)
+											</li>
+											<li style="margin-bottom: 5px;">
+												Our servers are either down or experiencing high loads
+											</li>
+											<li style="margin-bottom: 5px;">
+												Issue with the actual site you are visiting
+											</li>
+											<li>Security flaggers!</li>
+										</ul>
+									</div>
+								</div>
+							`;
+
+						return "";
+					})}
 				</div>
 			</div>
-			
-			<div style="display: block; position: absolute; bottom: 10px; width: 100%; text-align: center; color: #888; z-index: 100;">
-				<p class="banner" style="margin: 0; background: rgba(0,0,0,0.5); padding: 5px 15px; display: inline-block; border-radius: 20px; font-size: 14px;">Hosted by <span style="color: rgba(200, 50, 255, 1); text-decoration: none;">Billiger</span> <i style="margin-left: 10px; cursor: pointer;" class="fa-solid fa-xmark"></i></p>
+
+			<div
+				style="display: block; position: absolute; bottom: 10px; width: 100%; text-align: center; color: #888; z-index: 100;"
+			>
+				<p
+					class="banner"
+					style="margin: 0; background: rgba(0,0,0,0.5); padding: 5px 15px; display: inline-block; border-radius: 20px; font-size: 14px;"
+				>
+					Hosted by
+					<span style="color: rgba(200, 50, 255, 1); text-decoration: none;"
+						>Billiger</span
+					>
+					<i
+						style="margin-left: 10px; cursor: pointer;"
+						class="fa-solid fa-xmark"
+					></i>
+				</p>
 			</div>
 		</div>
 	`;
@@ -2064,7 +2924,7 @@ function SettingsScreen() {
 
 
 function AppContainer() {
-	this.currentView = 'home';
+	this.currentView = "home";
 	this.css = `
 		width: 100%;
 		height: 100%;
@@ -2072,18 +2932,96 @@ function AppContainer() {
 
 	return html`
 		<div>
-			${use(this.currentView, view => {
-				if (view === 'proxy') return h(BrowserApp, { onCloseProxy: () => this.currentView = 'home', onSettings: () => this.currentView = 'settings' });
-				if (view === 'games') return h(GamesScreen, { onOpenProxy: () => this.currentView = 'proxy', onHome: () => this.currentView = 'home', onApps: () => this.currentView = 'apps', onSettings: () => this.currentView = 'settings' });
-				if (view === 'apps') return h(AppsScreen, { onOpenProxy: () => this.currentView = 'proxy', onHome: () => this.currentView = 'home', onGames: () => this.currentView = 'games', onSettings: () => this.currentView = 'settings' });
-				if (view === 'settings') return h(SettingsScreen, { onOpenProxy: () => this.currentView = 'proxy', onHome: () => this.currentView = 'home', onGames: () => this.currentView = 'games', onApps: () => this.currentView = 'apps' });
-				return h(HomeScreen, { onOpenProxy: () => this.currentView = 'proxy', onGames: () => this.currentView = 'games', onApps: () => this.currentView = 'apps', onSettings: () => this.currentView = 'settings' });
+			${use(this.currentView, (view) => {
+				if (view === "proxy")
+					return h(BrowserApp, {
+						onCloseProxy: () => (this.currentView = "home"),
+						onSettings: () => (this.currentView = "settings"),
+					});
+				if (view === "games")
+					return h(GamesScreen, {
+						onOpenProxy: () => (this.currentView = "proxy"),
+						onHome: () => (this.currentView = "home"),
+						onApps: () => (this.currentView = "apps"),
+						onSettings: () => (this.currentView = "settings"),
+					});
+				if (view === "apps")
+					return h(AppsScreen, {
+						onOpenProxy: () => (this.currentView = "proxy"),
+						onHome: () => (this.currentView = "home"),
+						onGames: () => (this.currentView = "games"),
+						onSettings: () => (this.currentView = "settings"),
+					});
+				if (view === "settings")
+					return h(SettingsScreen, {
+						onOpenProxy: () => (this.currentView = "proxy"),
+						onHome: () => (this.currentView = "home"),
+						onGames: () => (this.currentView = "games"),
+						onApps: () => (this.currentView = "apps"),
+					});
+				return h(HomeScreen, {
+					onOpenProxy: () => (this.currentView = "proxy"),
+					onGames: () => (this.currentView = "games"),
+					onApps: () => (this.currentView = "apps"),
+					onSettings: () => (this.currentView = "settings"),
+				});
 			})}
 		</div>
 	`;
 }
 
 window.addEventListener("load", async () => {
+	const attemptCloak = () => {
+		if (window.self !== window.top || !store.autoCloak || store.autoCloak === 'none') {
+			return true; // We don't need to cloak
+		}
+		
+		let win = null;
+		if (store.autoCloak === 'aboutBlank') {
+			win = window.open('about:blank', '_blank');
+			if (win) {
+				let iframe = win.document.createElement('iframe');
+				iframe.src = location.href;
+				iframe.style.width = '100vw';
+				iframe.style.height = '100vh';
+				iframe.style.border = 'none';
+				iframe.style.margin = '0';
+				win.document.body.style.margin = '0';
+				win.document.body.appendChild(iframe);
+				location.replace('https://classroom.google.com/');
+				return true;
+			}
+		} else if (store.autoCloak === 'blob') {
+			const blob = new Blob(
+				[`<!DOCTYPE html><html><head><title>Tasks</title><link rel="icon" href="https://ssl.gstatic.com/images/branding/product/1x/tasks_2021_32dp.png"></head><body style="margin:0;"><iframe src="${location.href}" style="width:100vw;height:100vh;border:none;margin:0;"></iframe></body></html>`],
+				{ type: "text/html" }
+			);
+			const url = URL.createObjectURL(blob);
+			win = window.open(url, '_blank');
+			if (win) {
+				location.replace('https://classroom.google.com/');
+				return true;
+			}
+		}
+		
+		return false; // Cloak was requested but failed (popup blocked)
+	};
+
+	if (!attemptCloak()) {
+		// If popups are blocked on load, wait for ANY user interaction on the entire document to bypass it
+		const triggerCloakOnInteraction = () => {
+			if (attemptCloak()) {
+				// Clean up listeners if successful
+				window.removeEventListener('click', triggerCloakOnInteraction);
+				window.removeEventListener('keydown', triggerCloakOnInteraction);
+				window.removeEventListener('touchstart', triggerCloakOnInteraction);
+			}
+		};
+		window.addEventListener('click', triggerCloakOnInteraction);
+		window.addEventListener('keydown', triggerCloakOnInteraction);
+		window.addEventListener('touchstart', triggerCloakOnInteraction);
+	}
+
 	const root = document.getElementById("app");
 	try {
 		root.replaceWith(h(AppContainer));

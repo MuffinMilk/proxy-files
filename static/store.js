@@ -3,7 +3,10 @@ const store = $store(
 		url: "https://google.com",
 		wispurl:
 			_CONFIG?.wispurl ||
-			"wss://wisp.mercurywork.shop",
+			(location.protocol === "https:" ? "wss" : "ws") +
+				"://" +
+				location.host +
+				"/wisp/",
 		bareurl:
 			_CONFIG?.bareurl ||
 			(location.protocol === "https:" ? "https" : "http") +
@@ -12,7 +15,14 @@ const store = $store(
 				"/bare/",
 		proxy: "",
 		transport: "/epoxy/index.mjs",
+		autoCloak: "none",
+		tabCloak: "none",
 	},
 	{ ident: "settings", backing: "localstorage", autosave: "auto" }
 );
+
+if (store.wispurl === "wss://wisp.mercurywork.shop") {
+	store.wispurl = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
+}
+
 self.store = store;

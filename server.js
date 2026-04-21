@@ -17,6 +17,8 @@ import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
 import { bareModulePath } from "@mercuryworkshop/bare-as-module3";
 import { chmodSync, mkdirSync, writeFileSync } from "fs";
 
+import { uvPath } from "@titaniumnetwork-dev/ultraviolet";
+
 const bare = createBareServer("/bare/", {
 	logErrors: true,
 	blockLocal: false,
@@ -53,6 +55,11 @@ fastify.register(fastifyStatic, {
 	decorateReply: false,
 });
 fastify.register(fastifyStatic, {
+	root: uvPath,
+	prefix: "/uv/",
+	decorateReply: false,
+});
+fastify.register(fastifyStatic, {
 	root: join(fileURLToPath(new URL(".", import.meta.url)), "./dist"),
 	prefix: "/scram/",
 	decorateReply: false,
@@ -83,12 +90,44 @@ fastify.register(fastifyStatic, {
 	decorateReply: false,
 });
 
+fastify.get('/api/games', async (request, reply) => {
+	try {
+		const sources = ["gnmath"];
+		const results = await Promise.all(
+			sources.map((s) =>
+				fetch("https://useducationcenter.org/asset/json/zones/" + s + ".json", {
+					headers: {
+						'Origin': 'https://ais-dev-pbgxrzcuvyouy46fbpt3gq-383302654371.us-west2.run.app'
+					}
+				})
+					.then((r) => r.json())
+					.catch(() => [])
+			)
+		);
+		const allGames = [];
+		const seen = new Set();
+		for (const list of results) {
+			for (const g of list) {
+				if (!seen.has(g.name)) {
+					seen.add(g.name);
+					allGames.push(g);
+				}
+			}
+		}
+		reply.send(allGames);
+	} catch (e) {
+		console.error(e);
+		reply.status(500).send({ error: "Failed to fetch games" });
+	}
+});
+
 const PORT = 3000;
 
 fastify.listen({
 	port: PORT,
 	host: "0.0.0.0",
 });
+
 
 fastify.setNotFoundHandler((request, reply) => {
 	console.error("PAGE PUNCHED THROUGH SW - " + request.url);
