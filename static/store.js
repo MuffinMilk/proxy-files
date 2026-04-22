@@ -17,6 +17,8 @@ const store = $store(
 		transport: "/epoxy/index.mjs",
 		autoCloak: "none",
 		tabCloak: "none",
+		panicKeys: "`",
+		panicUrl: "https://classroom.google.com",
 	},
 	{ ident: "settings", backing: "localstorage", autosave: "auto" }
 );

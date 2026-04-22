@@ -1892,6 +1892,25 @@ if (store.tabCloak) {
 	window.applyTabCloak(store.tabCloak);
 }
 
+window.addEventListener("keydown", (e) => {
+	if (!store.panicKeys) return;
+	const keys = store.panicKeys.split(",").map((k) => k.trim().toLowerCase());
+	const pressedKey = e.key.toLowerCase();
+	
+	// Support common names like "backtick" for "`"
+	const aliases = {
+		"backtick": "`",
+		"grave": "`",
+		"tilde": "~",
+		"escape": "escape",
+		"space": " "
+	};
+
+	if (keys.includes(pressedKey) || (aliases[pressedKey] && keys.includes(aliases[pressedKey]))) {
+		location.replace(store.panicUrl || "https://classroom.google.com");
+	}
+});
+
 function SettingsScreen() {
 	this.css = `
 		--background-color: #000;
@@ -2466,7 +2485,7 @@ function SettingsScreen() {
 										<h1>Panic Key</h1>
 										<p>
 											Press the selected keybind to go to another site quickly.
-											You can set multiple keybinds by seperating them with a
+											You can set multiple keybinds (e.g. `backtick, escape`) by seperating them with a
 											comma.
 										</p>
 										<div class="pgroup">
@@ -2474,13 +2493,33 @@ function SettingsScreen() {
 												>keyboard</span
 											>
 											<input
-												placeholder="Set a keybind. Backtick by default"
-												value="backtick"
+												placeholder="Set a keybind. Backtick (`) by default"
+												bind:value=${use(store.panicKeys)}
 											/>
 										</div>
-										<button class="buttonreg" style="max-width: 200px;">
-											Save
-										</button>
+										<p style="margin-top: 10px; margin-bottom: 5px;">Panic URL</p>
+										<div class="pgroup">
+											<span class="material-symbols-outlined picon"
+												>link</span
+											>
+											<input
+												placeholder="https://classroom.google.com"
+												bind:value=${use(store.panicUrl)}
+											/>
+										</div>
+										<div style="display: flex; gap: 10px; margin-top: 10px;">
+											<button class="buttonreg" style="max-width: 150px;" on:click=${(e) => { 
+												const btn = e.target;
+												const oldText = btn.innerText;
+												btn.innerText = "Saved!";
+												setTimeout(() => btn.innerText = oldText, 2000);
+											}}>
+												Save Settings
+											</button>
+											<button class="buttonreg" style="max-width: 150px; background: rgba(255, 50, 50, 0.2);" on:click=${() => location.replace(store.panicUrl || "https://classroom.google.com")}>
+												Panic Now
+											</button>
+										</div>
 									</div>
 								</div>
 							`;
