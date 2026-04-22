@@ -2485,7 +2485,7 @@ function SettingsScreen() {
 										<h1>Panic Key</h1>
 										<p>
 											Press the selected keybind to go to another site quickly.
-											You can set multiple keybinds (e.g. `backtick, escape`) by seperating them with a
+											You can set multiple keybinds (e.g. 'backtick, escape') by seperating them with a
 											comma.
 										</p>
 										<div class="pgroup">
@@ -2493,7 +2493,7 @@ function SettingsScreen() {
 												>keyboard</span
 											>
 											<input
-												placeholder="Set a keybind. Backtick (`) by default"
+												placeholder="Set a keybind. Backtick (&#96;) by default"
 												bind:value=${use(store.panicKeys)}
 											/>
 										</div>
