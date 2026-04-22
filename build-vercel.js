@@ -62,6 +62,22 @@ try {
     }
 
     console.log("Static export complete! Files are in the 'public' directory.");
+
+    // Fetch and save games data for static deployment
+    console.log("Fetching static games data...");
+    try {
+        const res = await fetch("https://useducationcenter.org/asset/json/zones/gnmath.json");
+        if (res.ok) {
+            const data = await res.json();
+            fs.mkdirSync('public/api', { recursive: true });
+            fs.writeFileSync('public/api/games.json', JSON.stringify(data));
+            console.log("Static games data saved to public/api/games.json");
+        } else {
+            console.warn("Failed to fetch games data at build time.");
+        }
+    } catch (e) {
+        console.warn("Error fetching static games data:", e.message);
+    }
 } catch (err) {
     console.error("Critical error during static export:", err);
     process.exit(1);

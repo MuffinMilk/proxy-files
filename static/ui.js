@@ -1238,24 +1238,32 @@ function GamesScreen() {
 	this.loading = true;
 	this.activeGameUrl = null;
 
-	fetch("/api/games")
+	const fallbackGames = [
+		{ name: "1v1.lol", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/1v1-lol/index.html", cover: "https://play-lh.googleusercontent.com/mO27wM1ZRE0734h6t8_g6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
+		{ name: "Slope", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/slope/index.html", cover: "https://play-lh.googleusercontent.com/u_pW_T7X9XyGk_I9Z6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
+		{ name: "Minecraft", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/eaglercraft-1.8.8/index.html", cover: "https://assets.xboxservices.com/assets/f4/04/f40445f1-3316-419b-ba23-9c8828987b7a.jpg?n=Minecraft_L_Hero-Mobile-768x432_01.jpg" },
+		{ name: "Geometry Dash", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/geometry-dash/index.html", cover: "https://play-lh.googleusercontent.com/9n9O3f_zF9o7sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
+		{ name: "Bitlife", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/bitlife/index.html", cover: "https://play-lh.googleusercontent.com/j1_T7X9XyGk_I9Z6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" }
+	];
+
+	fetch("/api/games.json")
 		.then((r) => {
 			if (!r.ok) throw new Error("Failed response from proxy API");
 			return r.json();
 		})
 		.then((data) => {
 			console.log("Games loaded:", data);
-			if (Array.isArray(data)) {
+			if (Array.isArray(data) && data.length > 0) {
 				this.games = data;
 			} else {
-				console.error("Games data is not an array:", data);
-				this.games = [];
+				console.warn("Games data is empty or not an array, using fallbacks");
+				this.games = fallbackGames;
 			}
 			this.loading = false;
 		})
 		.catch((e) => {
-			console.error("Failed to load games", e);
-			this.games = [];
+			console.error("Failed to load games, using fallbacks", e);
+			this.games = fallbackGames;
 			this.loading = false;
 		});
 
@@ -1460,7 +1468,11 @@ function GamesScreen() {
 								<div class="game-card" on:click=${() => this.openGame(game)}>
 									<img
 										class="game-cover"
-										src=${game.cover || "https://via.placeholder.com/150"}
+										src=${game.cover || "https://api.dicebear.com/7.x/initials/png?seed=" + encodeURIComponent(game.name) + "&backgroundColor=111111&textColor=ffffff"}
+										on:error=${(e) => {
+											e.target.onerror = null;
+											e.target.src = "https://api.dicebear.com/7.x/initials/png?seed=" + encodeURIComponent(game.name) + "&backgroundColor=111111&textColor=ffffff";
+										}}
 										loading="lazy"
 										alt=${game.name}
 									/>
