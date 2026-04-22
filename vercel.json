@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm run build:all && node build-vercel.js",
+  "buildCommand": "pnpm run build && node build-vercel.js",
   "outputDirectory": "public",
   "framework": null
 }

@@ -10,7 +10,8 @@
 	},
 	"scripts": {
 		"start": "node server.js",
-		"build": "rspack build --mode production",
+		"build": "NODE_ENV=production rspack build --mode production",
+		"build:dev": "rspack build --mode development",
 		"build:types": "rslib build && rm -rf dist/temp",
 		"build:all": "pnpm run build && pnpm run build:types",
 		"rewriter:build": "cd rewriter/wasm/ && bash build.sh && cd ../../",

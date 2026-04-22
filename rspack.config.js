@@ -12,9 +12,11 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const packagemeta = JSON.parse(await readFile("package.json"));
 
 // Configuration for standard IIFE builds
+const isProd = process.env.NODE_ENV === "production" || !process.env.DEBUG;
+
 const iifeConfig = defineConfig({
-	mode: "development",
-	devtool: "source-map",
+	mode: isProd ? "production" : "development",
+	devtool: isProd ? false : "source-map",
 	entry: {
 		all: join(__dirname, "src/entry.ts"),
 		sync: join(__dirname, "src/sync.ts"),
@@ -109,8 +111,8 @@ const iifeConfig = defineConfig({
 
 // Configuration for ES module build
 const moduleConfig = defineConfig({
-	mode: "development",
-	devtool: "source-map",
+	mode: isProd ? "production" : "development",
+	devtool: isProd ? false : "source-map",
 	entry: {
 		bundle: join(__dirname, "src/index.ts"),
 	},
