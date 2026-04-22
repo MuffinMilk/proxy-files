@@ -12,19 +12,19 @@
 		"start": "node server.js",
 		"build": "rspack build --mode production",
 		"build:types": "rslib build && rm -rf dist/temp",
-		"build:all": "npm run build && npm run build:types",
+		"build:all": "pnpm run build && pnpm run build:types",
 		"rewriter:build": "cd rewriter/wasm/ && bash build.sh && cd ../../",
 		"dev": "node server.js",
 		"dev:debug": "DEBUG=1 node server.js",
-		"prepack": "RELEASE=1 npm run rewriter:build && npm run build:all",
-		"pub": "npm publish --no-git-checks --access public",
+		"prepack": "RELEASE=1 pnpm run rewriter:build && pnpm run build:all",
+		"pub": "pnpm publish --no-git-checks --access public",
 		"format": "prettier --write .",
 		"format:docs": "remark \"docs/**/*.{md,mdx}\" --output",
 		"lint": "eslint ./src/",
 		"lint:fix": "eslint ./src/ --fix",
 		"lint:workflows": "actionlint .github/workflows/*.yml",
-		"lint:all": "npm run lint && npm run lint:workflows",
-		"test": "npm run test:package && npm run test:integration",
+		"lint:all": "pnpm run lint && pnpm run lint:workflows",
+		"test": "pnpm run test:package && pnpm run test:integration",
 		"test:package": "ava tests/ci/packageValidation.js",
 		"test:integration": "npx playwright test",
 		"docs": "typedoc",
@@ -52,6 +52,10 @@
 	"keywords": [],
 	"author": "",
 	"license": "MIT",
+	"packageManager": "pnpm@9.1.0",
+	"engines": {
+		"node": ">=20.0.0"
+	},
 	"ava": {
 		"files": [
 			"tests/ci/**/*.js"
