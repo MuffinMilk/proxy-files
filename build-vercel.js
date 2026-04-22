@@ -33,12 +33,20 @@ try {
     copyDir('dist', 'public/scram');
     copyDir('assets', 'public/assets');
     
+    // Explicitly define paths for dependencies if standard exports fail
+    const ultravioletPath = path.join(__dirname, 'node_modules/@titaniumnetwork-dev/ultraviolet/dist');
+    const bareMuxPathFixed = baremuxPath || path.join(__dirname, 'node_modules/@mercuryworkshop/bare-mux/dist');
+    const epoxyPathFixed = epoxyPath || path.join(__dirname, 'node_modules/@mercuryworkshop/epoxy-transport/dist');
+    const libcurlPathFixed = libcurlPath || path.join(__dirname, 'node_modules/@mercuryworkshop/libcurl-transport/dist');
+    const bareModulePathFixed = bareModulePath || path.join(__dirname, 'node_modules/@mercuryworkshop/bare-as-module3/dist');
+    
     // Copy node_modules assets - handle potential failures gracefully
     const paths = [
-        { path: baremuxPath, dest: 'public/baremux', name: 'baremux' },
-        { path: epoxyPath, dest: 'public/epoxy', name: 'epoxy' },
-        { path: libcurlPath, dest: 'public/libcurl', name: 'libcurl' },
-        { path: bareModulePath, dest: 'public/baremod', name: 'baremod' }
+        { path: bareMuxPathFixed, dest: 'public/baremux', name: 'baremux' },
+        { path: epoxyPathFixed, dest: 'public/epoxy', name: 'epoxy' },
+        { path: libcurlPathFixed, dest: 'public/libcurl', name: 'libcurl' },
+        { path: bareModulePathFixed, dest: 'public/baremod', name: 'baremod' },
+        { path: ultravioletPath, dest: 'public/uv', name: 'ultraviolet' }
     ];
 
     for (const p of paths) {

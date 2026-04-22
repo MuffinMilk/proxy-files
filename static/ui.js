@@ -3078,17 +3078,21 @@ window.addEventListener("load", async () => {
 
 		return btoa(binary);
 	}
-	const arraybuffer = await (await fetch("/assets/scramjet.png")).arrayBuffer();
-	console.log(
-		"%cb",
-		`
-      background-image: url(data:image/png;base64,${b64(arraybuffer)});
-      color: transparent;
-      padding-left: 200px;
-      padding-bottom: 100px;
-      background-size: contain;
-      background-position: center center;
-      background-repeat: no-repeat;
-  `
-	);
+	try {
+		const arraybuffer = await (await fetch("/assets/scramjet.png")).arrayBuffer();
+		console.log(
+			"%cb",
+			`
+	      background-image: url(data:image/png;base64,${b64(arraybuffer)});
+	      color: transparent;
+	      padding-left: 200px;
+	      padding-bottom: 100px;
+	      background-size: contain;
+	      background-position: center center;
+	      background-repeat: no-repeat;
+	  `
+		);
+	} catch (e) {
+		console.warn("Logo failed to load:", e);
+	}
 });
