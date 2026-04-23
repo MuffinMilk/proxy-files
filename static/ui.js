@@ -1106,6 +1106,43 @@ function GamesScreen() {
 			z-index: 10;
 		}
 
+		.search-header {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+			border-radius: 30px;
+			margin-bottom: 40px;
+		}
+
+		.search-header__input {
+			font-family: 'DM Sans';
+			font-size: 16px;
+			background-color: #0a0a0a;
+			border: solid 0.5px #525252;
+			color: var(--text-color);
+			padding: 0.7rem 1.5rem;
+			border-radius: 25px;
+			width: 300px;
+			height: 45px;
+			transition: all ease-in-out 0.5s;
+			text-align: center;
+			box-sizing: border-box;
+		}
+
+		.search-header__input:hover,
+		.search-header__input:focus {
+			box-shadow: 10px 5px 40px -10px #ae00ff, -14px -4px 40px -10px #4400ff;
+			width: 350px;
+			outline: none;
+			background-color: #0a0a0af0;
+		}
+
+		.search-header__input::-webkit-input-placeholder {
+			font-weight: 200;
+			color: #868686;
+		}
+
 		.games-grid {
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -1236,6 +1273,7 @@ function GamesScreen() {
 
 	this.games = [];
 	this.loading = true;
+	this.searchQuery = "";
 	this.activeGameUrl = null;
 
 	const fallbackGames = [
@@ -1457,13 +1495,26 @@ function GamesScreen() {
 			<div class="games-container">
 				<div class="games-header">Games Arcades</div>
 
+				<div class="search-header">
+					<input
+						class="search-header__input"
+						type="text"
+						placeholder="search up a game..."
+						bind:value=${use(this.searchQuery)}
+						on:input=${(e) => (this.searchQuery = e.target.value)}
+					/>
+				</div>
+
 				${use(this.loading, (l) =>
 					l ? html`<div class="loading">Loading games...</div>` : ""
 				)}
 
 				<div class="games-grid">
-					${use(this.games, (games) =>
-						games.map(
+					${use(this.games, (games) => use(this.searchQuery, (query) => {
+						const filteredGames = games.filter((g) =>
+							g.name.toLowerCase().includes(query.toLowerCase())
+						);
+						return filteredGames.map(
 							(game) => html`
 								<div class="game-card" on:click=${() => this.openGame(game)}>
 									<img
@@ -1479,8 +1530,8 @@ function GamesScreen() {
 									<div class="game-title">${game.name}</div>
 								</div>
 							`
-						)
-					)}
+						);
+					}))}
 				</div>
 			</div>
 		</div>

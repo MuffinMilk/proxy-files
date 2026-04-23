@@ -90,7 +90,7 @@ fastify.register(fastifyStatic, {
 	decorateReply: false,
 });
 
-fastify.get('/api/games', async (request, reply) => {
+fastify.get('/api/games.json', async (request, reply) => {
 	try {
 		const sources = ["gnmath"];
 		const results = await Promise.all(
