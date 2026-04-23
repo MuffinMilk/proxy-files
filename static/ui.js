@@ -1271,11 +1271,6 @@ function GamesScreen() {
 		}
 	`;
 
-	this.games = [];
-	this.loading = true;
-	this.searchQuery = "";
-	this.activeGameUrl = null;
-
 	const fallbackGames = [
 		{ name: "1v1.lol", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/1v1-lol/index.html", cover: "https://play-lh.googleusercontent.com/mO27wM1ZRE0734h6t8_g6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
 		{ name: "Slope", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/slope/index.html", cover: "https://play-lh.googleusercontent.com/u_pW_T7X9XyGk_I9Z6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
@@ -1284,8 +1279,17 @@ function GamesScreen() {
 		{ name: "Bitlife", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/bitlife/index.html", cover: "https://play-lh.googleusercontent.com/j1_T7X9XyGk_I9Z6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" }
 	];
 
-	fetch("/api/games.json")
+	this.games = fallbackGames;
+	this.loading = true;
+	this.searchQuery = "";
+	this.activeGameUrl = null;
+
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+	fetch("/api/games.json", { signal: controller.signal })
 		.then((r) => {
+			clearTimeout(timeoutId);
 			if (!r.ok) throw new Error("Failed response from proxy API");
 			return r.json();
 		})
@@ -1293,15 +1297,12 @@ function GamesScreen() {
 			console.log("Games loaded:", data);
 			if (Array.isArray(data) && data.length > 0) {
 				this.games = data;
-			} else {
-				console.warn("Games data is empty or not an array, using fallbacks");
-				this.games = fallbackGames;
 			}
 			this.loading = false;
 		})
 		.catch((e) => {
-			console.error("Failed to load games, using fallbacks", e);
-			this.games = fallbackGames;
+			clearTimeout(timeoutId);
+			console.error("Failed to load games, sticking with fallbacks", e);
 			this.loading = false;
 		});
 
