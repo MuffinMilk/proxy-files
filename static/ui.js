@@ -1272,11 +1272,11 @@ function GamesScreen() {
 	`;
 
 	const fallbackGames = [
-		{ name: "1v1.lol", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/1v1-lol/index.html", cover: "https://play-lh.googleusercontent.com/mO27wM1ZRE0734h6t8_g6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
-		{ name: "Slope", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/slope/index.html", cover: "https://play-lh.googleusercontent.com/u_pW_T7X9XyGk_I9Z6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
-		{ name: "Minecraft", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/eaglercraft-1.8.8/index.html", cover: "https://assets.xboxservices.com/assets/f4/04/f40445f1-3316-419b-ba23-9c8828987b7a.jpg?n=Minecraft_L_Hero-Mobile-768x432_01.jpg" },
-		{ name: "Geometry Dash", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/geometry-dash/index.html", cover: "https://play-lh.googleusercontent.com/9n9O3f_zF9o7sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
-		{ name: "Bitlife", url: "https://raw.githubusercontent.com/gn-math/gn-math-games/main/html/bitlife/index.html", cover: "https://play-lh.googleusercontent.com/j1_T7X9XyGk_I9Z6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" }
+		{ name: "1v1.lol", url: "https://raw.githack.com/gn-math/gn-math-games/main/html/1v1-lol/index.html", cover: "https://play-lh.googleusercontent.com/mO27wM1ZRE0734h6t8_g6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
+		{ name: "Slope", url: "https://raw.githack.com/gn-math/gn-math-games/main/html/slope/index.html", cover: "https://play-lh.googleusercontent.com/u_pW_T7X9XyGk_I9Z6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
+		{ name: "Minecraft", url: "https://raw.githack.com/gn-math/gn-math-games/main/html/eaglercraft-1.8.8/index.html", cover: "https://assets.xboxservices.com/assets/f4/04/f40445f1-3316-419b-ba23-9c8828987b7a.jpg?n=Minecraft_L_Hero-Mobile-768x432_01.jpg" },
+		{ name: "Geometry Dash", url: "https://raw.githack.com/gn-math/gn-math-games/main/html/geometry-dash/index.html", cover: "https://play-lh.googleusercontent.com/9n9O3f_zF9o7sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
+		{ name: "Bitlife", url: "https://raw.githack.com/gn-math/gn-math-games/main/html/bitlife/index.html", cover: "https://play-lh.googleusercontent.com/j1_T7X9XyGk_I9Z6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" }
 	];
 
 	this.games = fallbackGames;
@@ -1351,35 +1351,24 @@ function GamesScreen() {
 					urlToLoad = urlToLoad
 						.replace(
 							"https://cdn.jsdelivr.net/gh/",
-							"https://raw.githubusercontent.com/"
+							"https://raw.githack.com/"
 						)
 						.replace("@", "/");
 				}
 
 				if (urlToLoad.includes("raw.githubusercontent.com")) {
-					const res = await fetch(urlToLoad + "?t=" + Date.now());
-					if (!res.ok) throw new Error("Game file not found on GitHub");
-					const html = await res.text();
-					if (
-						html.includes("Couldn't find the requested file") ||
-						html === "404: Not Found"
-					) {
-						throw new Error("File not found message in response");
-					}
-					iframe.contentDocument.open();
-					iframe.contentDocument.write(html);
-					iframe.contentDocument.close();
-				} else {
-					const frame = scramjet.createFrame();
-					frame.id = "game-content-frame";
-					frame.style.width = "100%";
-					frame.style.height = "100%";
-					frame.style.border = "none";
-					frame.style.background = "#fff";
-					iframe.replaceWith(frame);
-					iframe = frame;
-					frame.go(urlToLoad);
+					urlToLoad = urlToLoad.replace("raw.githubusercontent.com", "raw.githack.com");
 				}
+
+				const frame = scramjet.createFrame();
+				frame.id = "game-content-frame";
+				frame.style.width = "100%";
+				frame.style.height = "100%";
+				frame.style.border = "none";
+				frame.style.background = "#fff";
+				iframe.replaceWith(frame);
+				iframe = frame;
+				frame.go(urlToLoad);
 			};
 
 			try {
