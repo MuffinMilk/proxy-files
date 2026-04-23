@@ -392,7 +392,7 @@ function BrowserApp() {
   <script>
     function navigate(url) {
       if(!url.trim()) return;
-      if(!url.startsWith('http') && !url.includes('.')) url = 'https://google.com/search?q=' + encodeURIComponent(url);
+      if(!url.startsWith('http') && !url.includes('.')) url = 'https://duckduckgo.com/?q=' + encodeURIComponent(url);
       else if (!url.startsWith('http')) url = 'https://' + url;
       window.parent.postMessage({ type: 'scramjet-navigate', url: url }, '*');
     }
@@ -414,7 +414,7 @@ function BrowserApp() {
 	frame.addEventListener("urlchange", (e) => {
 		if (!e.url) return;
 		if (e.url.startsWith("data:text/html")) {
-			this.url = "";
+			this.url = "about:space";
 		} else {
 			this.url = e.url;
 		}
@@ -430,7 +430,7 @@ function BrowserApp() {
 		if (!target.startsWith("http") && target.includes(".")) {
 			target = "https://" + target;
 		} else if (!target.startsWith("http")) {
-			target = "https://google.com/search?q=" + encodeURIComponent(target);
+			target = "https://duckduckgo.com/?q=" + encodeURIComponent(target);
 		}
 		this.url = target;
 		return frame.go(target);
@@ -519,8 +519,8 @@ function BrowserApp() {
 						<div
 							class="utilityIcon"
 							on:click=${() => {
-								this.url = "";
-								store.url = "";
+								this.url = "about:space";
+								store.url = "about:space";
 								this.mount();
 							}}
 						>
@@ -840,7 +840,7 @@ function HomeScreen() {
 		if (e.key === "Enter" && this.searchQuery.trim()) {
 			let url = this.searchQuery.trim();
 			if (!url.startsWith("http") && !url.includes(".")) {
-				url = "https://www.google.com/search?q=" + encodeURIComponent(url);
+				url = "https://duckduckgo.com/?q=" + encodeURIComponent(url);
 			} else if (!url.startsWith("http")) {
 				url = "https://" + url;
 			}
@@ -1159,6 +1159,9 @@ function GamesScreen() {
 			border: 1px solid rgba(255,255,255,0.05);
 			display: flex;
 			flex-direction: column;
+			content-visibility: auto;
+			contain-intrinsic-size: 232px;
+			will-change: transform, box-shadow;
 		}
 
 		.game-card:hover {
@@ -1193,10 +1196,48 @@ function GamesScreen() {
 		}
 
 		.loading {
-			text-align: center;
-			margin-top: 50px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			margin-top: 100px;
+			gap: 20px;
+		}
+
+		.loading-spinner {
+			width: 50px;
+			height: 50px;
+			border: 4px solid rgba(255,255,255,0.1);
+			border-top-color: #7d2ae8;
+			border-radius: 50%;
+			animation: games-spin 1s linear infinite;
+		}
+
+		.loading-text-container {
+			display: flex;
+			align-items: baseline;
+			gap: 12px;
+			background: rgba(0, 0, 0, 0.4);
+			padding: 10px 20px;
+			border-radius: 30px;
+			border: 1px solid rgba(140, 0, 255, 0.2);
+		}
+
+		.loading-text {
 			font-size: 20px;
-			color: #888;
+			font-weight: 500;
+			color: #fff;
+			text-shadow: 0 0 10px rgba(140, 0, 255, 0.3);
+		}
+
+		.loading-count {
+			font-size: 16px;
+			color: #aaa;
+			font-variant-numeric: tabular-nums;
+		}
+
+		@keyframes games-spin {
+			to { transform: rotate(360deg); }
 		}
 
 		.blobbig {
@@ -1271,15 +1312,7 @@ function GamesScreen() {
 		}
 	`;
 
-	const fallbackGames = [
-		{ name: "1v1.lol", url: "https://raw.githack.com/gn-math/gn-math-games/main/html/1v1-lol/index.html", cover: "https://play-lh.googleusercontent.com/mO27wM1ZRE0734h6t8_g6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
-		{ name: "Slope", url: "https://raw.githack.com/gn-math/gn-math-games/main/html/slope/index.html", cover: "https://play-lh.googleusercontent.com/u_pW_T7X9XyGk_I9Z6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
-		{ name: "Minecraft", url: "https://raw.githack.com/gn-math/gn-math-games/main/html/eaglercraft-1.8.8/index.html", cover: "https://assets.xboxservices.com/assets/f4/04/f40445f1-3316-419b-ba23-9c8828987b7a.jpg?n=Minecraft_L_Hero-Mobile-768x432_01.jpg" },
-		{ name: "Geometry Dash", url: "https://raw.githack.com/gn-math/gn-math-games/main/html/geometry-dash/index.html", cover: "https://play-lh.googleusercontent.com/9n9O3f_zF9o7sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" },
-		{ name: "Bitlife", url: "https://raw.githack.com/gn-math/gn-math-games/main/html/bitlife/index.html", cover: "https://play-lh.googleusercontent.com/j1_T7X9XyGk_I9Z6v8sN_2B4pXyS4p8zR_T4U0q_N2Yp8vX_j_n8_4X8_6_f_U" }
-	];
-
-	this.games = fallbackGames;
+	this.games = [];
 	this.loading = true;
 	this.searchQuery = "";
 	this.activeGameUrl = null;
@@ -1296,13 +1329,34 @@ function GamesScreen() {
 		.then((data) => {
 			console.log("Games loaded:", data);
 			if (Array.isArray(data) && data.length > 0) {
-				this.games = data;
+				let total = data.length;
+				let current = 0;
+				let maxStep = Math.max(1, Math.floor(total / 12));
+				
+				let timer = setInterval(() => {
+					current += Math.floor(Math.random() * maxStep * 2) + 1;
+					if (current >= total) current = total;
+					
+					const textEl = document.getElementById("loading-count-text");
+					if (textEl) {
+						textEl.innerText = current + " / " + total;
+					}
+					
+					if (current === total) {
+						clearInterval(timer);
+						setTimeout(() => {
+							this.games = data;
+							this.loading = false;
+						}, 150);
+					}
+				}, 40);
+			} else {
+				this.loading = false;
 			}
-			this.loading = false;
 		})
 		.catch((e) => {
 			clearTimeout(timeoutId);
-			console.error("Failed to load games, sticking with fallbacks", e);
+			console.error("Failed to load games: ", e);
 			this.loading = false;
 		});
 
@@ -1496,7 +1550,13 @@ function GamesScreen() {
 				</div>
 
 				${use(this.loading, (l) =>
-					l ? html`<div class="loading">Loading games...</div>` : ""
+					l ? html`<div class="loading">
+						<div class="loading-spinner"></div>
+						<div class="loading-text-container">
+							<div class="loading-text">Loading assets...</div>
+							<div class="loading-count" id="loading-count-text">0 / 0</div>
+						</div>
+					</div>` : ""
 				)}
 
 				<div class="games-grid">
