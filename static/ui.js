@@ -370,7 +370,7 @@ function BrowserApp() {
   <div class="container">
     <div class="search-bar">
       <img src="https://api.iconify.design/logos:google-icon.svg">
-      <input type="text" placeholder="search up something bigaa" id="q" onkeydown="if(event.key==='Enter') navigate(this.value);" autocomplete="off" />
+      <input type="text" placeholder="Search the web or enter URL" id="q" onkeydown="if(event.key==='Enter') navigate(this.value);" autocomplete="off" />
       <svg viewBox="0 0 18 18"><path d="M7.132 0C3.197 0 0 3.124 0 6.97c0 3.844 3.197 6.969 7.132 6.969 1.557 0 2.995-.49 4.169-1.32L16.82 18 18 16.847l-5.454-5.342a6.846 6.846 0 0 0 1.718-4.536C14.264 3.124 11.067 0 7.132 0zm0 .82c3.48 0 6.293 2.748 6.293 6.15 0 3.4-2.813 6.149-6.293 6.149S.839 10.37.839 6.969C.839 3.568 3.651.82 7.132.82z"></path></svg>
     </div>
     
@@ -404,7 +404,7 @@ function BrowserApp() {
 </body>
 </html>`;
 		const encoded = btoa(unescape(encodeURIComponent(htmlStart)));
-		if (!this.url || this.url === "about:space") {
+		if (!this.url || this.url === "") {
 			frame.go(`data:text/html;base64,${encoded}`);
 		} else {
 			frame.go(this.url);
@@ -414,7 +414,7 @@ function BrowserApp() {
 	frame.addEventListener("urlchange", (e) => {
 		if (!e.url) return;
 		if (e.url.startsWith("data:text/html")) {
-			this.url = "about:space";
+			this.url = "";
 		} else {
 			this.url = e.url;
 		}
@@ -423,7 +423,7 @@ function BrowserApp() {
 	const handleSubmit = () => {
 		let target = this.url.trim();
 		if (!target) {
-			this.url = "about:space";
+			this.url = "";
 			this.mount();
 			return;
 		}
@@ -519,8 +519,8 @@ function BrowserApp() {
 						<div
 							class="utilityIcon"
 							on:click=${() => {
-								this.url = "about:space";
-								store.url = "about:space";
+								this.url = "";
+								store.url = "";
 								this.mount();
 							}}
 						>
@@ -1929,7 +1929,7 @@ function AppsScreen() {
 					<input
 						class="search-header__input"
 						type="text"
-						placeholder="search up something bigaa"
+						placeholder="Search the web or enter URL"
 						bind:value=${use(this.searchQuery)}
 						on:input=${(e) => (this.searchQuery = e.target.value)}
 					/>
