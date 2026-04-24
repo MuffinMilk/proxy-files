@@ -24,7 +24,11 @@ async function registerSW() {
 }
 registerSW();
 
-scramjet.init();
+try {
+	scramjet.init();
+} catch (e) {
+	console.error("Scramjet init failed:", e);
+}
 
 const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
 const flex = css`
@@ -437,16 +441,16 @@ function BrowserApp() {
 	const handleSubmit = () => {
 		let target = this.url.trim();
 		if (!target) {
-			this.url = "";
 			this.mount();
 			return;
 		}
-		if (!target.startsWith("http") && target.includes(".")) {
+		if (!target.startsWith("http") && (target.includes(".") && !target.includes(" "))) {
 			target = "https://" + target;
 		} else if (!target.startsWith("http")) {
-			target = "https://duckduckgo.com/?q=" + encodeURIComponent(target);
+			target = "https://www.google.com/search?q=" + encodeURIComponent(target);
 		}
 		this.url = target;
+		store.url = target;
 		return frame.go(target);
 	};
 
@@ -1377,17 +1381,20 @@ function GamesScreen() {
 	this.openGame = (gameObj) => {
 		let finalUrl = gameObj.url;
 
-		// jsdelivr blocked gn-math, fetch from github directly or via raw githack
 		if (finalUrl.includes("cdn.jsdelivr.net/gh/")) {
 			finalUrl = finalUrl
 				.replace(
 					"https://cdn.jsdelivr.net/gh/",
-					"https://raw.githubusercontent.com/"
+					"https://raw.githack.com/"
 				)
 				.replace("@", "/");
 		}
+		if (finalUrl.includes("raw.githubusercontent.com")) {
+			finalUrl = finalUrl.replace("raw.githubusercontent.com", "raw.githack.com");
+		}
 
 		this.activeGameUrl = finalUrl;
+		this.mount();
 
 		setTimeout(async () => {
 			const container = document.querySelector(".game-overlay-content");
@@ -1398,57 +1405,27 @@ function GamesScreen() {
 
 			const attemptLoad = async (urlToLoad) => {
 				const isUv = store.proxy === "ultraviolet";
+				let frameElement;
 				
-				if (!isUv) {
-					if (urlToLoad.includes("cdn.jsdelivr.net/gh/")) {
-						urlToLoad = urlToLoad
-							.replace(
-								"https://cdn.jsdelivr.net/gh/",
-								"https://raw.githack.com/"
-							)
-							.replace("@", "/");
-					}
-
-					if (urlToLoad.includes("raw.githubusercontent.com")) {
-						urlToLoad = urlToLoad.replace("raw.githubusercontent.com", "raw.githack.com");
-					}
-				}
-
-				let frame;
-				
-				console.log("Loading game with proxy:", store.proxy, "URL:", urlToLoad);
-
 				if (isUv) {
 					if (typeof __uv$config === "undefined") {
-						console.error("Ultraviolet config not found! Falling back to raw URL.");
-						frame = document.createElement("iframe");
-						frame.id = "game-content-frame";
-						frame.style.width = "100%";
-						frame.style.height = "100%";
-						frame.style.border = "none";
-						frame.style.background = "#fff";
-						frame.src = urlToLoad;
+						iframe.src = urlToLoad;
+						frameElement = iframe;
 					} else {
-						frame = document.createElement("iframe");
-						frame.id = "game-content-frame";
-						frame.style.width = "100%";
-						frame.style.height = "100%";
-						frame.style.border = "none";
-						frame.style.background = "#fff";
-						frame.src = __uv$config.prefix + __uv$config.encodeUrl(urlToLoad);
+						const newIframe = document.createElement("iframe");
+						newIframe.id = "game-content-frame";
+						newIframe.style.cssText = "width:100%;height:100%;border:none;background:#fff;";
+						newIframe.src = __uv$config.prefix + __uv$config.encodeUrl(urlToLoad);
+						iframe.replaceWith(newIframe);
+						frameElement = newIframe;
 					}
-					iframe.replaceWith(frame);
-					iframe = frame;
 				} else {
-					frame = scramjet.createFrame();
-					frame.id = "game-content-frame";
-					frame.style.width = "100%";
-					frame.style.height = "100%";
-					frame.style.border = "none";
-					frame.style.background = "#fff";
-					iframe.replaceWith(frame);
-					iframe = frame;
-					frame.go(urlToLoad);
+					const scramFrame = scramjet.createFrame();
+					scramFrame.frame.id = "game-content-frame";
+					scramFrame.frame.style.cssText = "width:100%;height:100%;border:none;background:#fff;";
+					iframe.replaceWith(scramFrame.frame);
+					scramFrame.go(urlToLoad);
+					frameElement = scramFrame.frame;
 				}
 			};
 
@@ -1456,14 +1433,16 @@ function GamesScreen() {
 				await attemptLoad(finalUrl);
 			} catch (e) {
 				console.error("Failed to load game:", e);
-				// Show error
-				iframe.contentDocument.open();
-				iframe.contentDocument.write(
-					`<h2>Sorry, this game's file is broken or missing!</h2><p>We tried to load ${gameObj.name} but something went wrong.</p>`
-				);
-				iframe.contentDocument.close();
+				let frame = document.getElementById("game-content-frame");
+				if (frame && frame.contentDocument) {
+					frame.contentDocument.open();
+					frame.contentDocument.write(
+						`<h2>Sorry, this game's file is broken or missing!</h2><p>Something went wrong while loading ${gameObj.name}.</p>`
+					);
+					frame.contentDocument.close();
+				}
 			}
-		}, 50);
+		}, 100);
 	};
 
 	this.closeGame = () => {

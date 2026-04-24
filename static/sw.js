@@ -9,8 +9,12 @@ if (navigator.userAgent.includes("Firefox")) {
 }
 
 importScripts("/scram/scramjet.all.js");
-const { ScramjetServiceWorker } = $scramjetLoadWorker();
-const scramjet = new ScramjetServiceWorker();
+try {
+	const { ScramjetServiceWorker } = $scramjetLoadWorker();
+	var scramjet = new ScramjetServiceWorker();
+} catch (e) {
+	console.error("Scramjet SW Load failed:", e);
+}
 
 importScripts("/uv/uv.bundle.js");
 importScripts("/uv.config.js");
@@ -18,22 +22,19 @@ importScripts("/uv/uv.sw.js");
 importScripts("/baremux/index.js");
 
 const uv = new UVServiceWorker();
-const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
 
 async function handleRequest(event) {
 	try {
-		await scramjet.loadConfig();
-	} catch (e) {
-		console.error("Scramjet loadConfig failed:", e);
-	}
-	
+		if (scramjet && typeof scramjet.loadConfig === "function") {
+			await scramjet.loadConfig();
+		}
+	} catch (e) {}
+
 	try {
-		if (scramjet && typeof scramjet.route === 'function' && scramjet.route(event)) {
+		if (scramjet && typeof scramjet.route === "function" && scramjet.route(event)) {
 			return scramjet.fetch(event);
 		}
-	} catch (e) {
-		// Scramjet might not be fully loaded
-	}
+	} catch (e) {}
 
 	try {
 		if (uv.route(event)) {
