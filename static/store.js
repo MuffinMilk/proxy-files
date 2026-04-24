@@ -13,7 +13,7 @@ const store = $store(
 				"://" +
 				location.host +
 				"/bare/",
-		proxy: "",
+		proxy: "ultraviolet",
 		transport: "/epoxy/index.mjs",
 		autoCloak: "none",
 		tabCloak: "none",

@@ -1414,15 +1414,30 @@ function GamesScreen() {
 					urlToLoad = urlToLoad.replace("raw.githubusercontent.com", "raw.githack.com");
 				}
 
-				const frame = scramjet.createFrame();
-				frame.id = "game-content-frame";
-				frame.style.width = "100%";
-				frame.style.height = "100%";
-				frame.style.border = "none";
-				frame.style.background = "#fff";
-				iframe.replaceWith(frame);
-				iframe = frame;
-				frame.go(urlToLoad);
+				const isUv = store.proxy === "ultraviolet";
+				let frame;
+				
+				if (isUv) {
+					frame = document.createElement("iframe");
+					frame.id = "game-content-frame";
+					frame.style.width = "100%";
+					frame.style.height = "100%";
+					frame.style.border = "none";
+					frame.style.background = "#fff";
+					iframe.replaceWith(frame);
+					iframe = frame;
+					frame.src = __uv$config.prefix + __uv$config.encodeUrl(urlToLoad);
+				} else {
+					frame = scramjet.createFrame();
+					frame.id = "game-content-frame";
+					frame.style.width = "100%";
+					frame.style.height = "100%";
+					frame.style.border = "none";
+					frame.style.background = "#fff";
+					iframe.replaceWith(frame);
+					iframe = frame;
+					frame.go(urlToLoad);
+				}
 			};
 
 			try {
