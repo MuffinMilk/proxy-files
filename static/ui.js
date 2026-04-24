@@ -286,48 +286,56 @@ function BrowserApp() {
 	`;
 	this.url = store.url;
 
-	const isUv = store.proxy === "ultraviolet";
-	let frame;
-	if (isUv) {
-		const iframe = document.createElement("iframe");
-		iframe.style.cssText = "width:100%;height:100%;border:none;background:#000;";
-		frame = {
-			frame: iframe,
-			go: (targetUrl) => {
-				if (targetUrl.startsWith('data:text/html')) {
-					iframe.src = targetUrl;
-				} else {
-					if (typeof __uv$config === 'undefined') {
-						console.error("Ultraviolet config missing, attempting reload...");
-						location.reload();
-						return;
+	this.mount = () => {
+		const isUv = store.proxy === "ultraviolet";
+		let frame;
+		if (isUv) {
+			const iframeElement = document.createElement("iframe");
+			iframeElement.style.cssText = "width:100%;height:100%;border:none;background:#000;";
+			frame = {
+				frame: iframeElement,
+				go: (targetUrl) => {
+					if (targetUrl.startsWith("data:text/html")) {
+						iframeElement.src = targetUrl;
+					} else {
+						if (typeof __uv$config === "undefined") {
+							console.error("Ultraviolet config missing, attempting reload...");
+							location.reload();
+							return;
+						}
+						iframeElement.src = __uv$config.prefix + __uv$config.encodeUrl(targetUrl);
 					}
-					iframe.src = __uv$config.prefix + __uv$config.encodeUrl(targetUrl);
+				},
+				back: () => { try { iframeElement.contentWindow?.history.back() } catch(e){} },
+				forward: () => { try { iframeElement.contentWindow?.history.forward() } catch(e){} },
+				reload: () => { try { iframeElement.contentWindow?.location.reload() } catch(e){} },
+				addEventListener: (event, cb) => {
+					if (event === "urlchange") {
+						// Simple polling fallback for UV iframe
+						setInterval(() => {
+							try {
+								const currentUrl = iframeElement.contentWindow?.location.href;
+								// We can't easily sync this.url for cross-origin UV URLs without decoder
+							} catch (e) {}
+						}, 2000);
+					}
 				}
-			},
-			back: () => { try { iframe.contentWindow?.history.back() } catch(e){} },
-			forward: () => { try { iframe.contentWindow?.history.forward() } catch(e){} },
-			reload: () => { try { iframe.contentWindow?.location.reload() } catch(e){} },
-			addEventListener: (event, cb) => {
-				if (event === "urlchange") {
-                    // Not easy to track cross-origin url changes seamlessly for normal iframe
-					// we just skip for now, maybe add basic onload polling
-				}
+			};
+		} else {
+			frame = scramjet.createFrame();
+		}
+
+		const handleMessage = (e) => {
+			if (e.data && e.data.type === "scramjet-navigate") {
+				this.url = e.data.url;
+				handleSubmit();
 			}
 		};
-	} else {
-		frame = scramjet.createFrame();
-	}
 
-	const handleMessage = (e) => {
-		if (e.data && e.data.type === "scramjet-navigate") {
-			this.url = e.data.url;
-			handleSubmit();
-		}
-	};
-
-	this.mount = () => {
+		if (window._scramjetMsgHandler) window.removeEventListener("message", window._scramjetMsgHandler);
+		window._scramjetMsgHandler = handleMessage;
 		window.addEventListener("message", handleMessage);
+
 		const htmlStart = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -427,16 +435,95 @@ function BrowserApp() {
 		} else {
 			frame.go(this.url);
 		}
-	};
 
-	frame.addEventListener("urlchange", (e) => {
-		if (!e.url) return;
-		if (e.url.startsWith("data:text/html")) {
-			this.url = "";
-		} else {
-			this.url = e.url;
-		}
-	});
+		return html`
+			<div>
+				<ul class="navbar">
+					<li style="margin-left: 0px; margin-top: 10px; margin-bottom: 5px;">
+						<img
+							class="logo"
+							src="/assets/logo.webp"
+							alt="Logo"
+							onerror="this.src='https://api.dicebear.com/7.x/initials/png?seed=D&backgroundColor=111111&textColor=ffffff'"
+						/>
+					</li>
+					<hr style="margin-top: 5px" />
+					<li>
+						<span class="material-symbols-outlined" on:click=${this.onCloseProxy}>cottage</span>
+					</li>
+					<li>
+						<span class="material-symbols-outlined" on:click=${this.onCloseProxy}>joystick</span>
+					</li>
+					<li>
+						<span class="material-symbols-outlined" on:click=${this.onCloseProxy}>apps</span>
+					</li>
+					<li>
+						<span id="navactive" class="material-symbols-outlined">public</span>
+					</li>
+					<hr />
+					<li>
+						<span class="material-symbols-outlined" on:click=${this.onSettings}>tune</span>
+					</li>
+				</ul>
+
+				<div class="utilityBar">
+					<ul class="utility">
+						<li>
+							<div class="utilityIcon" on:click=${() => frame.back()}>
+								<span class="material-symbols-outlined">arrow_back</span>
+							</div>
+						</li>
+						<li>
+							<div class="utilityIcon" on:click=${() => frame.reload()}>
+								<span class="material-symbols-outlined">refresh</span>
+							</div>
+						</li>
+						<li>
+							<div class="utilityIcon" on:click=${() => frame.forward()}>
+								<span class="material-symbols-outlined">arrow_forward</span>
+							</div>
+						</li>
+						<hr />
+						<div class="search-header">
+							<button class="search-header__button">
+								<span class="material-symbols-outlined" style="font-size: 18px; color: #888;">public</span>
+							</button>
+							<input
+								class="search-header__input"
+								placeholder="Search the web or enter URL"
+								value=${use(this.url)}
+								on:input=${(e) => (this.url = e.target.value)}
+								on:keydown=${(e) => e.key === "Enter" && handleSubmit()}
+							/>
+						</div>
+						<hr style="margin-left: 0; min-width: 1px" />
+						<li>
+							<div
+								class="utilityIcon"
+								on:click=${() => {
+									this.url = "";
+									store.url = "";
+									this.mount();
+								}}
+							>
+								<span class="material-symbols-outlined">cottage</span>
+							</div>
+						</li>
+						<li>
+							<div
+								class="utilityIcon"
+								on:click=${() => document.documentElement.requestFullscreen()}
+							>
+								<span class="material-symbols-outlined">fullscreen</span>
+							</div>
+						</li>
+					</ul>
+				</div>
+
+				<div class="proxyWrapper">${frame.frame}</div>
+			</div>
+		`;
+	};
 
 	const handleSubmit = () => {
 		let target = this.url.trim();
@@ -454,125 +541,7 @@ function BrowserApp() {
 		return frame.go(target);
 	};
 
-	return html`
-		<div>
-			<ul class="navbar">
-				<li style="margin-left: 0px; margin-top: 10px; margin-bottom: 5px;">
-					<img
-						class="logo"
-						src="/assets/logo.webp"
-						alt="Logo"
-						onerror="this.src='https://api.dicebear.com/7.x/initials/png?seed=D&backgroundColor=111111&textColor=ffffff'"
-					/>
-				</li>
-				<hr style="margin-top: 5px" />
-				<li>
-					<span class="material-symbols-outlined" on:click=${this.onCloseProxy}
-						>cottage</span
-					>
-				</li>
-				<li>
-					<span class="material-symbols-outlined" on:click=${this.onCloseProxy}
-						>joystick</span
-					>
-				</li>
-				<li>
-					<span class="material-symbols-outlined" on:click=${this.onCloseProxy}
-						>apps</span
-					>
-				</li>
-				<li>
-					<span id="navactive" class="material-symbols-outlined">public</span>
-				</li>
-				<hr />
-				<li>
-					<span class="material-symbols-outlined" on:click=${this.onSettings}
-						>tune</span
-					>
-				</li>
-			</ul>
-
-			<div class="utilityBar">
-				<ul class="utility">
-					<li>
-						<div class="utilityIcon" on:click=${() => frame.back()}>
-							<span class="material-symbols-outlined">arrow_back</span>
-						</div>
-					</li>
-					<li>
-						<div class="utilityIcon" on:click=${() => frame.reload()}>
-							<span class="material-symbols-outlined">refresh</span>
-						</div>
-					</li>
-					<li>
-						<div class="utilityIcon" on:click=${() => frame.forward()}>
-							<span class="material-symbols-outlined">arrow_forward</span>
-						</div>
-					</li>
-					<hr />
-					<div class="search-header">
-						<button class="search-header__button">
-							<svg fill="none" viewBox="0 0 18 18" height="18" width="18">
-								<path
-									fill="#868686"
-									d="M7.132 0C3.197 0 0 3.124 0 6.97c0 3.844 3.197 6.969 7.132 6.969 1.557 0 2.995-.49 4.169-1.32L16.82 18 18 16.847l-5.454-5.342a6.846 6.846 0 0 0 1.718-4.536C14.264 3.124 11.067 0 7.132 0zm0 .82c3.48 0 6.293 2.748 6.293 6.15 0 3.4-2.813 6.149-6.293 6.149S.839 10.37.839 6.969C.839 3.568 3.651.82 7.132.82z"
-								></path>
-							</svg>
-						</button>
-						<input
-							class="search-header__input"
-							type="text"
-							placeholder="Enter search or web address"
-							id="gointospace2"
-							bind:value=${use(this.url)}
-							on:input=${(e) => {
-								this.url = e.target.value;
-							}}
-							on:keydown=${(e) =>
-								e.keyCode == 13 && (store.url = this.url) && handleSubmit()}
-						/>
-					</div>
-					<hr style="margin-left: 0; min-width: 1px" />
-					<li>
-						<div
-							class="utilityIcon"
-							on:click=${() => {
-								this.url = "";
-								store.url = "";
-								this.mount();
-							}}
-						>
-							<span class="material-symbols-outlined">cottage</span>
-						</div>
-					</li>
-					<li>
-						<div class="utilityIcon">
-							<span class="material-symbols-outlined">code</span>
-						</div>
-					</li>
-					<li>
-						<div
-							class="utilityIcon"
-							on:click=${() => document.documentElement.requestFullscreen()}
-						>
-							<span class="material-symbols-outlined">fullscreen</span>
-						</div>
-					</li>
-					<li>
-						<div
-							class="utilityIcon"
-							on:click=${() => window.open(store.proxy === "ultraviolet" ? __uv$config.prefix + __uv$config.encodeUrl(this.url) : scramjet.encodeUrl(this.url))}
-							style="margin-right: 10px"
-						>
-							<span class="material-symbols-outlined">instant_mix</span>
-						</div>
-					</li>
-				</ul>
-			</div>
-
-			<div class="proxyWrapper">${frame.frame}</div>
-		</div>
-	`;
+	return html`${use(this.mount)}`;
 }
 function HomeScreen() {
 	this.css = `
@@ -3052,7 +3021,7 @@ function AppContainer() {
 
 	return html`
 		<div>
-			${use(this.currentView, (view) => {
+			${use([this.currentView, store.proxy], ([view, proxy]) => {
 				if (view === "proxy")
 					return h(BrowserApp, {
 						onCloseProxy: () => (this.currentView = "home"),
