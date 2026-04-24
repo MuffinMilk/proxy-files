@@ -31,9 +31,6 @@ const fastify = Fastify({
 	serverFactory: (handler) => {
 		return createServer()
 			.on("request", (req, res) => {
-				res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-				res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
-
 				if (bare.shouldRoute(req)) {
 					bare.routeRequest(req, res);
 				} else {
@@ -70,53 +67,62 @@ fastify.register(fastifyStatic, {
 	decorateReply: false,
 });
 fastify.register(fastifyStatic, {
-	root: baremuxPath,
+	root: join(fileURLToPath(new URL(".", import.meta.url)), "./public/baremux"),
 	prefix: "/baremux/",
 	decorateReply: false,
 });
 fastify.register(fastifyStatic, {
-	root: epoxyPath,
+	root: join(fileURLToPath(new URL(".", import.meta.url)), "./public/epoxy"),
 	prefix: "/epoxy/",
 	decorateReply: false,
 });
 fastify.register(fastifyStatic, {
-	root: libcurlPath,
+	root: join(fileURLToPath(new URL(".", import.meta.url)), "./public/libcurl"),
 	prefix: "/libcurl/",
 	decorateReply: false,
 });
 fastify.register(fastifyStatic, {
-	root: bareModulePath,
+	root: join(fileURLToPath(new URL(".", import.meta.url)), "./public/baremod"),
 	prefix: "/baremod/",
 	decorateReply: false,
 });
 
-fastify.get('/api/games.json', async (request, reply) => {
+fastify.get("/api/games.json", async (request, reply) => {
 	try {
-		const sources = ["gnmath"];
+		const sources = [
+			{ name: "gnmath", url: "https://raw.githubusercontent.com/Green-Network/gn-math/main/asset/json/zones/gnmath.json" },
+			{ name: "gnports", url: "https://raw.githubusercontent.com/Green-Network/gn-math/main/asset/json/zones/gnports.json" },
+			{ name: "truffled", url: "https://raw.githubusercontent.com/Green-Network/gn-math/main/asset/json/zones/truffled.json" }
+		];
+		
 		const results = await Promise.all(
 			sources.map((s) =>
-				fetch("https://useducationcenter.org/asset/json/zones/" + s + ".json", {
-					headers: {
-						'Origin': 'https://ais-dev-pbgxrzcuvyouy46fbpt3gq-383302654371.us-west2.run.app'
-					}
-				})
+				fetch(s.url)
 					.then((r) => r.json())
-					.catch(() => [])
+					.catch((err) => {
+						console.error(`Failed to fetch source ${s.name}:`, err);
+						return [];
+					})
 			)
 		);
 		const allGames = [];
 		const seen = new Set();
 		for (const list of results) {
+			if (!Array.isArray(list)) continue;
 			for (const g of list) {
-				if (!seen.has(g.name)) {
+				if (g && g.name && !seen.has(g.name)) {
 					seen.add(g.name);
+					// Ensure URL is absolute or fix it if it's from GN-Math
+					if (g.url && g.url.startsWith("/") && !g.url.startsWith("//")) {
+						g.url = "https://raw.githubusercontent.com/Green-Network/gn-math/main" + g.url;
+					}
 					allGames.push(g);
 				}
 			}
 		}
 		reply.send(allGames);
 	} catch (e) {
-		console.error(e);
+		console.error("Games fetch error:", e);
 		reply.status(500).send({ error: "Failed to fetch games" });
 	}
 });

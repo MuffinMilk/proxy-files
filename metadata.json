@@ -1,5 +1,9 @@
 {
   "name": "Scramjet Proxy",
   "description": "An experimental, high-performance web proxy for bypassing web filters.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
 }

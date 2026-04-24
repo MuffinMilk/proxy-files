@@ -1318,7 +1318,7 @@ function GamesScreen() {
 	this.activeGameUrl = null;
 
 	const controller = new AbortController();
-	const timeoutId = setTimeout(() => controller.abort(), 5000);
+	const timeoutId = setTimeout(() => controller.abort(), 15000);
 
 	fetch("/api/games.json", { signal: controller.signal })
 		.then((r) => {
@@ -1401,32 +1401,48 @@ function GamesScreen() {
 			let iframe = document.getElementById("game-content-frame");
 
 			const attemptLoad = async (urlToLoad) => {
-				if (urlToLoad.includes("cdn.jsdelivr.net/gh/")) {
-					urlToLoad = urlToLoad
-						.replace(
-							"https://cdn.jsdelivr.net/gh/",
-							"https://raw.githack.com/"
-						)
-						.replace("@", "/");
-				}
-
-				if (urlToLoad.includes("raw.githubusercontent.com")) {
-					urlToLoad = urlToLoad.replace("raw.githubusercontent.com", "raw.githack.com");
-				}
-
 				const isUv = store.proxy === "ultraviolet";
+				
+				if (!isUv) {
+					if (urlToLoad.includes("cdn.jsdelivr.net/gh/")) {
+						urlToLoad = urlToLoad
+							.replace(
+								"https://cdn.jsdelivr.net/gh/",
+								"https://raw.githack.com/"
+							)
+							.replace("@", "/");
+					}
+
+					if (urlToLoad.includes("raw.githubusercontent.com")) {
+						urlToLoad = urlToLoad.replace("raw.githubusercontent.com", "raw.githack.com");
+					}
+				}
+
 				let frame;
 				
+				console.log("Loading game with proxy:", store.proxy, "URL:", urlToLoad);
+
 				if (isUv) {
-					frame = document.createElement("iframe");
-					frame.id = "game-content-frame";
-					frame.style.width = "100%";
-					frame.style.height = "100%";
-					frame.style.border = "none";
-					frame.style.background = "#fff";
+					if (typeof __uv$config === "undefined") {
+						console.error("Ultraviolet config not found! Falling back to raw URL.");
+						frame = document.createElement("iframe");
+						frame.id = "game-content-frame";
+						frame.style.width = "100%";
+						frame.style.height = "100%";
+						frame.style.border = "none";
+						frame.style.background = "#fff";
+						frame.src = urlToLoad;
+					} else {
+						frame = document.createElement("iframe");
+						frame.id = "game-content-frame";
+						frame.style.width = "100%";
+						frame.style.height = "100%";
+						frame.style.border = "none";
+						frame.style.background = "#fff";
+						frame.src = __uv$config.prefix + __uv$config.encodeUrl(urlToLoad);
+					}
 					iframe.replaceWith(frame);
 					iframe = frame;
-					frame.src = __uv$config.prefix + __uv$config.encodeUrl(urlToLoad);
 				} else {
 					frame = scramjet.createFrame();
 					frame.id = "game-content-frame";
@@ -1509,7 +1525,7 @@ function GamesScreen() {
 							<div class="game-overlay">
 								<div class="game-overlay-header">
 									<button on:click=${this.closeGame}>
-										<i class="ri-arrow-left-line"></i> Back to Arcades
+										<i class="fa-solid fa-arrow-left"></i> Back to Games
 									</button>
 								</div>
 								<div class="game-overlay-content">
