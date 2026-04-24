@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vortex Games List</title>
+    <style>
+        body { font-family: sans-serif; background: #000; color: #fff; padding: 20px; }
+        h1 { color: #ae00ff; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 10px; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        a { color: #fff; text-decoration: none; font-size: 18px; }
+        a:hover { color: #ae00ff; }
+        .back { margin-bottom: 20px; display: inline-block; color: #888; }
+    </style>
+</head>
+<body>
+    <a href="/" class="back">← Back to Main App</a>
+    <h1>Vortex Games List</h1>
+    <div id="games">Loading...</div>
+    <script>
+        fetch('/api/games.json')
+            .then(r => r.json())
+            .then(games => {
+                const container = document.getElementById('games');
+                if (games.length === 0) {
+                    container.innerHTML = 'No games found.';
+                    return;
+                }
+                const ul = document.createElement('ul');
+                games.forEach(game => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.textContent = game.name;
+                    a.onclick = (e) => {
+                        e.preventDefault();
+                        // Post message to parent to open the game in proxy
+                        window.parent.postMessage({ type: 'scramjet-navigate', url: game.url }, '*');
+                    };
+                    li.appendChild(a);
+                    ul.appendChild(li);
+                });
+                container.innerHTML = '';
+                container.appendChild(ul);
+            })
+            .catch(err => {
+                document.getElementById('games').innerHTML = 'Error loading games: ' + err.message;
+            });
+    </script>
+</body>
+</html>

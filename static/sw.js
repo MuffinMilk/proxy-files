@@ -15,17 +15,32 @@ const scramjet = new ScramjetServiceWorker();
 importScripts("/uv/uv.bundle.js");
 importScripts("/uv.config.js");
 importScripts("/uv/uv.sw.js");
+importScripts("/baremux/index.js");
+
 const uv = new UVServiceWorker();
+const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
 
 async function handleRequest(event) {
-	await scramjet.loadConfig();
+	try {
+		await scramjet.loadConfig();
+	} catch (e) {
+		console.error("Scramjet loadConfig failed:", e);
+	}
 	
-	if (scramjet.route(event)) {
-		return scramjet.fetch(event);
+	try {
+		if (scramjet && typeof scramjet.route === 'function' && scramjet.route(event)) {
+			return scramjet.fetch(event);
+		}
+	} catch (e) {
+		// Scramjet might not be fully loaded
 	}
 
-	if (uv.route(event)) {
-		return await uv.fetch(event);
+	try {
+		if (uv.route(event)) {
+			return await uv.fetch(event);
+		}
+	} catch (e) {
+		console.error("Ultraviolet fetch failed:", e);
 	}
 
 	return fetch(event.request);

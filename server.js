@@ -114,7 +114,7 @@ fastify.get("/api/games.json", async (request, reply) => {
 					seen.add(g.name);
 					// Ensure URL is absolute or fix it if it's from GN-Math
 					if (g.url && g.url.startsWith("/") && !g.url.startsWith("//")) {
-						g.url = "https://raw.githubusercontent.com/Green-Network/gn-math/main" + g.url;
+						g.url = "https://raw.githack.com/Green-Network/gn-math/main" + g.url;
 					}
 					allGames.push(g);
 				}

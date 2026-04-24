@@ -14,8 +14,17 @@ const scramjet = new ScramjetController({
 	},
 });
 
+async function registerSW() {
+	if (!("serviceWorker" in navigator)) return;
+	try {
+		await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+	} catch (e) {
+		console.error("SW Registration failed:", e);
+	}
+}
+registerSW();
+
 scramjet.init();
-navigator.serviceWorker.register("./sw.js");
 
 const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
 const flex = css`
@@ -89,7 +98,7 @@ function Config() {
 			</button>
 			<iframe
 				class="cfg-iframe"
-				src="https://dev.desmos.live.cdn.cloudflare.net/~"
+				src="about:blank"
 			></iframe>
 		</dialog>
 	`;
@@ -284,6 +293,11 @@ function BrowserApp() {
 				if (targetUrl.startsWith('data:text/html')) {
 					iframe.src = targetUrl;
 				} else {
+					if (typeof __uv$config === 'undefined') {
+						console.error("Ultraviolet config missing, attempting reload...");
+						location.reload();
+						return;
+					}
 					iframe.src = __uv$config.prefix + __uv$config.encodeUrl(targetUrl);
 				}
 			},
@@ -442,7 +456,7 @@ function BrowserApp() {
 				<li style="margin-left: 0px; margin-top: 10px; margin-bottom: 5px;">
 					<img
 						class="logo"
-						src="https://dev.desmos.live.cdn.cloudflare.net/assets/logo.webp"
+						src="/assets/logo.webp"
 						alt="Logo"
 						onerror="this.src='https://api.dicebear.com/7.x/initials/png?seed=D&backgroundColor=111111&textColor=ffffff'"
 					/>
@@ -1362,24 +1376,6 @@ function GamesScreen() {
 
 	this.openGame = (gameObj) => {
 		let finalUrl = gameObj.url;
-		if (finalUrl.startsWith("/")) {
-			finalUrl = "https://useducationcenter.org" + finalUrl;
-		}
-
-		if (finalUrl.includes("freebuisness")) {
-			finalUrl = finalUrl.replace("freebuisness/html", "gn-math/html");
-			// Fix known renamed files from the gn-math repository
-			if (finalUrl.includes("1-a.html"))
-				finalUrl = finalUrl.replace("1-a.html", "1-fde.html");
-			if (finalUrl.includes("112.html"))
-				finalUrl = finalUrl.replace("112.html", "112-fix.html");
-			if (finalUrl.includes("117.html"))
-				finalUrl = finalUrl.replace("117.html", "117-fix.html");
-			if (finalUrl.includes("123.html"))
-				finalUrl = finalUrl.replace("123.html", "123-win.html");
-			if (finalUrl.includes("196.html"))
-				finalUrl = finalUrl.replace("196.html", "196-fixed.html");
-		}
 
 		// jsdelivr blocked gn-math, fetch from github directly or via raw githack
 		if (finalUrl.includes("cdn.jsdelivr.net/gh/")) {
@@ -1459,56 +1455,13 @@ function GamesScreen() {
 			try {
 				await attemptLoad(finalUrl);
 			} catch (e) {
-				// primary URL loading failed, quietly attempting backups before logging
-				try {
-					const backupSources = [
-						"gnports",
-						"truffled",
-						"ugs",
-						"tglsc",
-						"selenite",
-						"seraph",
-						"3kh0",
-					];
-					let foundBackup = false;
-					for (const s of backupSources) {
-						if (foundBackup) break;
-						try {
-							const r = await fetch(
-								"https://useducationcenter.org/asset/json/zones/" + s + ".json"
-							);
-							const data = await r.json();
-							const backupGame = data.find(
-								(g) =>
-									g.name.toLowerCase() === gameObj.name.toLowerCase() &&
-									g.url !== gameObj.url
-							);
-							if (backupGame) {
-								let backupUrl = backupGame.url;
-								if (backupUrl.startsWith("/"))
-									backupUrl = "https://useducationcenter.org" + backupUrl;
-								// We found a backup, load it silently
-								await attemptLoad(backupUrl);
-								foundBackup = true;
-							}
-						} catch (err) {}
-					}
-
-					if (!foundBackup) {
-						// If no backups work, just show error
-						iframe.contentDocument.open();
-						iframe.contentDocument.write(
-							`<h2>Sorry, this game's file is broken or missing! (404 Not Found)</h2><p>We tried looking for backups but couldn't find any for ${gameObj.name}.</p>`
-						);
-						iframe.contentDocument.close();
-					}
-				} catch (err) {
-					iframe.contentDocument.open();
-					iframe.contentDocument.write(
-						`<h2>Sorry, this game's file is broken or missing! (404 Not Found)</h2><p>We tried looking for backups but couldn't find any for ${gameObj.name}.</p>`
-					);
-					iframe.contentDocument.close();
-				}
+				console.error("Failed to load game:", e);
+				// Show error
+				iframe.contentDocument.open();
+				iframe.contentDocument.write(
+					`<h2>Sorry, this game's file is broken or missing!</h2><p>We tried to load ${gameObj.name} but something went wrong.</p>`
+				);
+				iframe.contentDocument.close();
 			}
 		}, 50);
 	};
@@ -1568,7 +1521,12 @@ function GamesScreen() {
 			<div class="blobbig"></div>
 
 			<div class="games-container">
-				<div class="games-header">Games Arcades</div>
+				<div class="games-header" style="display: flex; justify-content: space-between; align-items: center;">
+					<span>Vortex Games</span>
+					<a href="/games_list.html" style="font-size: 14px; color: #888; text-decoration: none; font-weight: normal; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
+						Switch to HTML List
+					</a>
+				</div>
 
 				<div class="search-header">
 					<input
@@ -2401,7 +2359,7 @@ function SettingsScreen() {
 				<li style="margin-left: 0px; margin-top: 10px; margin-bottom: 5px;">
 					<img
 						class="logo"
-						src="https://dev.desmos.live.cdn.cloudflare.net/assets/logo.webp"
+						src="/assets/logo.webp"
 						alt="Logo"
 						onerror="this.src='https://api.dicebear.com/7.x/initials/png?seed=D&backgroundColor=111111&textColor=ffffff'"
 					/>

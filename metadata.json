@@ -1,6 +1,6 @@
 {
-  "name": "Scramjet Proxy",
-  "description": "An experimental, high-performance web proxy for bypassing web filters.",
+  "name": "Vortex Proxy",
+  "description": "A powerful, high-performance web proxy and game arcade for bypassing web filters.",
   "requestFramePermissions": [
     "camera",
     "microphone",
